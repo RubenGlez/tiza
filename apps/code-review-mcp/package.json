@@ -1,0 +1,22 @@
+{
+  "name": "code-review-mcp-example",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "benchmark": "tsx benchmark.ts",
+    "without-tiza": "tsx without-tiza.ts",
+    "with-tiza": "tsx with-tiza.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest",
+    "@modelcontextprotocol/sdk": "latest",
+    "@tiza/core": "workspace:*",
+    "@tiza/mcp": "workspace:*",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "tsx": "latest",
+    "typescript": "latest"
+  }
+}

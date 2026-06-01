@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Docs (internal)
+docs/
+
+# OS
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
+*.swp

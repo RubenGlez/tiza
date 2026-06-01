@@ -1,0 +1,33 @@
+{
+  "name": "@tiza/mcp",
+  "version": "0.1.0",
+  "description": "MCP server for the Tiza shared context store",
+  "license": "MIT",
+  "bin": {
+    "tiza-mcp": "./dist/server.js"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "latest",
+    "@tiza/core": "workspace:*",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "tsup": "latest",
+    "typescript": "latest"
+  }
+}
