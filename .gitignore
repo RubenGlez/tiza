@@ -4,6 +4,7 @@ node_modules/
 # Build outputs
 dist/
 *.tsbuildinfo
+apps/code-review-mcp/benchmark-results/
 
 # Environment
 .env
@@ -12,6 +13,7 @@ dist/
 
 # Docs (internal)
 docs/
+.harness/
 
 # OS
 .DS_Store

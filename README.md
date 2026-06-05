@@ -58,6 +58,8 @@ Savings compound as agent count grows (same fixture, `temperature: 0`):
 
 **50% fewer LLM calls. 74–90% fewer input tokens depending on agent count.**
 
+Scope note: these numbers compare two architectural policies in the included code-review benchmark: a naive LLM-orchestrated MCP loop with growing history versus a CA-MCP workflow where tools coordinate through Tiza and the LLM only plans and synthesizes. Stronger baselines, including compact-history and cached-history MCP, are the next benchmark-hardening step.
+
 Run it yourself: `ANTHROPIC_API_KEY=... pnpm benchmark`
 
 ---
@@ -185,7 +187,7 @@ This project is a practical implementation of the CA-MCP architecture described 
 
 > Jayanti, M.A. & Han, X.Y. (2026). *Enhancing Model Context Protocol (MCP) with Context-Aware Server Collaboration*. arXiv:2601.11595.
 
-See [CONCEPT.md](./docs/CONCEPT.md) for a detailed explanation of the paper and how Tiza implements it.
+See the paper linked above for the full CA-MCP architecture description.
 
 ---
 
