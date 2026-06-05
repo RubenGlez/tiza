@@ -8,15 +8,15 @@
     "with-tiza": "tsx with-tiza.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "latest",
-    "@modelcontextprotocol/sdk": "latest",
+    "@anthropic-ai/sdk": "0.100.1",
+    "@modelcontextprotocol/sdk": "1.29.0",
     "@tiza/core": "workspace:*",
     "@tiza/mcp": "workspace:*",
-    "zod": "latest"
+    "zod": "4.4.3"
   },
   "devDependencies": {
-    "@types/node": "latest",
-    "tsx": "latest",
-    "typescript": "latest"
+    "@types/node": "25.9.1",
+    "tsx": "4.22.3",
+    "typescript": "6.0.3"
   }
 }

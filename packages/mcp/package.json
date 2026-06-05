@@ -21,13 +21,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "latest",
+    "@modelcontextprotocol/sdk": "1.29.0",
     "@tiza/core": "workspace:*",
-    "zod": "latest"
+    "zod": "4.4.3"
   },
   "devDependencies": {
-    "@types/node": "latest",
-    "tsup": "latest",
-    "typescript": "latest"
+    "@types/node": "25.9.1",
+    "tsup": "8.5.1",
+    "typescript": "6.0.3"
   }
 }
