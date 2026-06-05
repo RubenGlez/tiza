@@ -45,7 +45,10 @@ export async function runWithTiza(
   await tizaClient.connect(tizaTransport);
 
   const tizaTools = await listAnthropicTools(tizaClient);
-  const initTool = tizaTools.find((t) => t.name === "tiza_init")!;
+  const initTool = tizaTools.find((t) => t.name === "tiza_init");
+  if (!initTool) {
+    throw new Error("Expected tiza_init tool to be available");
+  }
 
   let calls = 0;
   let totalInputTokens = 0;
