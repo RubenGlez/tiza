@@ -187,7 +187,7 @@ Serializes the full store state to Markdown. Ready to inject into an LLM prompt.
 
 ## Tiza MCP
 
-Tiza ships with a standalone MCP server and a programmatic factory. The MCP is the integration boundary for Harness and other multi-agent systems: it keeps the core store decoupled while exposing run-level operations over MCP.
+Tiza ships with a standalone MCP server and a programmatic factory. The MCP keeps the core store decoupled while exposing run-level operations over MCP.
 
 The server can be configured through environment variables:
 

@@ -74,7 +74,7 @@ describe("TizaRuntime", () => {
     expect(prompt).toContain("batch-42");
   });
 
-  it("builds stage context prompts for harness consumers", () => {
+  it("builds stage context prompts for run-aware consumers", () => {
     const runtime = new TizaRuntime();
 
     runtime.openRun({

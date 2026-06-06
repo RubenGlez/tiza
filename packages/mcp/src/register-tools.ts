@@ -215,7 +215,7 @@ export function registerTizaTools(
 
   server.tool(
     "tiza_get_stage_context",
-    "Get a stage-oriented prompt for Harness or any other MCP that needs run-specific context.",
+    "Get a stage-oriented prompt for any MCP that needs run-specific context.",
     {
       stage: z.string().describe("Stage identifier or name"),
       run_id: z.string().optional().describe("Run identifier. Defaults to the active run."),
