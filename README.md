@@ -68,6 +68,8 @@ Run it yourself: `ANTHROPIC_API_KEY=... pnpm benchmark`
 
 ## Install
 
+Both packages are published on npm:
+
 ```bash
 npm install @tiza/core
 ```
