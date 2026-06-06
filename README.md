@@ -185,6 +185,33 @@ Serializes the full store state to Markdown. Ready to inject into an LLM prompt.
 
 ---
 
+## TizaRuntime
+
+`TizaRuntime` is also exported from `@tiza/core`. It adds multi-run management on top of `createStore()` — useful when a server or MCP process needs to maintain several independent runs at the same time. Runs can optionally be persisted to disk so they survive process restarts.
+
+File-backed persistence is enabled by passing `stateDir` (or setting the `TIZA_STATE_DIR` environment variable). Without it, runs are held in memory for the lifetime of the process.
+
+```typescript
+import { TizaRuntime } from "@tiza/core"
+
+const runtime = new TizaRuntime({ stateDir: "/tmp/tiza" })
+
+const store = runtime.openRun("pr-142", {
+  task: "Review PR #142 - Add user authentication",
+  agents: ["security", "quality", "tests"]
+})
+
+store.write({
+  agent: "security",
+  type: "finding",
+  payload: { severity: "high", file: "auth.ts", line: 42, issue: "JWT secret hardcoded", suggestion: "Move to environment variable" }
+})
+
+console.log(store.toPrompt())
+```
+
+---
+
 ## Tiza MCP
 
 Tiza ships with a standalone MCP server and a programmatic factory. The MCP keeps the core store decoupled while exposing run-level operations over MCP.
