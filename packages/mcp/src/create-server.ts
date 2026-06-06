@@ -8,7 +8,7 @@ export interface CreateTizaServerOptions extends TizaRuntimeOptions {}
 // Useful for tests or scenarios where you don't want a separate process.
 export function createTizaServer(options: CreateTizaServerOptions = {}): McpServer {
   const runtime = new TizaRuntime(options);
-  const server = new McpServer({ name: "tiza", version: "0.3.0" });
+  const server = new McpServer({ name: "tiza", version: "0.4.0" });
   registerTizaTools(server, runtime);
   return server;
 }
