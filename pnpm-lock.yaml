@@ -61,8 +61,8 @@ importers:
         specifier: 1.29.0
         version: 1.29.0(zod@4.4.3)
       '@tiza/core':
-        specifier: workspace:^0.1.0
-        version: link:../core
+        specifier: ^0.1.0
+        version: 0.1.0
       zod:
         specifier: 4.4.3
         version: 4.4.3
@@ -752,6 +752,10 @@ packages:
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
+
+  '@tiza/core@0.1.0':
+    resolution: {integrity: sha512-LwNSJU/eNSHRcApu1p+arz0PxutwYXx6dCHpWNLBib1TJU3Df9o95PAsd1yRt77rzKBaBiPgrNZOVekPFgDkZw==}
+    engines: {node: '>=22'}
 
   '@tybys/wasm-util@0.10.2':
     resolution: {integrity: sha512-RoBvJ2X0wuKlWFIjrwffGw1IqZHKQqzIchKaadZZfnNpsAYp2mM0h36JtPCjNDAHGgYez/15uMBpfGwchhiMgg==}
@@ -1992,6 +1996,8 @@ snapshots:
   '@stablelib/base64@1.0.1': {}
 
   '@standard-schema/spec@1.1.0': {}
+
+  '@tiza/core@0.1.0': {}
 
   '@tybys/wasm-util@0.10.2':
     dependencies:
