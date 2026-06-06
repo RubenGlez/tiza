@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "description": "Shared context store for multi-agent MCP systems",
   "license": "MIT",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
