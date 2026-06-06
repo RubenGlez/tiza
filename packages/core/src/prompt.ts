@@ -1,3 +1,4 @@
+import { SEVERITY_ORDER } from "./types";
 import type {
   DecisionPayload,
   Entry,
@@ -50,11 +51,9 @@ function formatFindings(entries: Entry[]): string {
     return acc;
   }, {});
 
-  const severityOrder: Severity[] = ["critical", "high", "medium", "low", "info"];
-
   const lines = ["## Findings"];
 
-  for (const severity of severityOrder) {
+  for (const severity of SEVERITY_ORDER) {
     const group = bySeverity[severity];
     if (!group || group.length === 0) continue;
 

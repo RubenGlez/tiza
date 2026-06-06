@@ -4,6 +4,8 @@ export type EntryType = "finding" | "insight" | "decision";
 
 export type Severity = "critical" | "high" | "medium" | "low" | "info";
 
+export const SEVERITY_ORDER: Severity[] = ["critical", "high", "medium", "low", "info"] as const;
+
 export interface Entry<T = unknown> {
   id: string;
   agent: AgentId;

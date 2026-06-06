@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
-import { TizaRuntime } from "./runtime";
+import { FilePersistenceBackend, MemoryPersistenceBackend, PromptVariants, TizaRuntime } from "./runtime";
 
 describe("TizaRuntime", () => {
   it("opens and reads isolated runs", () => {
@@ -56,7 +56,7 @@ describe("TizaRuntime", () => {
     expect(prompt).toContain("check auth");
   });
 
-  it("can emit run metadata when requested", () => {
+  it("can emit run metadata via PromptVariants.withMetadata", () => {
     const runtime = new TizaRuntime();
 
     runtime.openRun({
@@ -67,7 +67,7 @@ describe("TizaRuntime", () => {
       batchId: "batch-42",
     });
 
-    const prompt = runtime.prompt("run-meta", { includeMetadata: true });
+    const prompt = runtime.prompt("run-meta", PromptVariants.withMetadata);
     expect(prompt).toContain("# Run Metadata");
     expect(prompt).toContain("Run ID");
     expect(prompt).toContain("/repos/meta");
@@ -101,30 +101,70 @@ describe("TizaRuntime", () => {
     expect(list.every((run) => run.phase === "planning")).toBe(true);
   });
 
-  it("persists runs when a state directory is configured", () => {
+  it("persists runs across instances using MemoryPersistenceBackend", () => {
+    const backend = new MemoryPersistenceBackend();
+
+    const first = new TizaRuntime({ backend });
+    first.openRun({
+      runId: "run-persist",
+      task: "Persistent task",
+      agents: ["security", "quality"],
+      repoPath: "/repos/persist",
+      batchId: "batch-persist",
+    });
+    first.write({
+      agent: "security",
+      type: "finding",
+      payload: { severity: "high", issue: "persist this finding" },
+    });
+    first.done("security");
+
+    const second = new TizaRuntime({ backend });
+    expect(second.listRuns().map((run) => run.runId)).toContain("run-persist");
+    expect(second.read(undefined, "run-persist")).toHaveLength(1);
+    expect(second.status("run-persist").completed).toContain("security");
+    expect(second.prompt("run-persist", PromptVariants.withMetadata)).toContain("run-persist");
+  });
+
+  it("persists runs to disk via FilePersistenceBackend", () => {
     const stateDir = mkdtempSync(join(tmpdir(), "tiza-runtime-"));
 
     try {
-      const first = new TizaRuntime({ stateDir });
+      const backend = new FilePersistenceBackend(stateDir);
+
+      const first = new TizaRuntime({ backend });
       first.openRun({
-        runId: "run-persist",
-        task: "Persistent task",
-        agents: ["security", "quality"],
-        repoPath: "/repos/persist",
-        batchId: "batch-persist",
+        runId: "run-disk",
+        task: "Disk task",
+        agents: ["security"],
+        repoPath: "/repos/disk",
       });
       first.write({
         agent: "security",
         type: "finding",
-        payload: { severity: "high", issue: "persist this finding" },
+        payload: { severity: "high", issue: "disk finding" },
       });
       first.done("security");
 
+      const second = new TizaRuntime({ backend: new FilePersistenceBackend(stateDir) });
+      expect(second.listRuns().map((r) => r.runId)).toContain("run-disk");
+      expect(second.read(undefined, "run-disk")).toHaveLength(1);
+      expect(second.status("run-disk").completed).toContain("security");
+    } finally {
+      rmSync(stateDir, { recursive: true, force: true });
+    }
+  });
+
+  it("stateDir option still works for backwards compatibility", () => {
+    const stateDir = mkdtempSync(join(tmpdir(), "tiza-runtime-compat-"));
+
+    try {
+      const first = new TizaRuntime({ stateDir });
+      first.openRun({ runId: "run-compat", task: "Compat task", agents: ["a"] });
+      first.write({ agent: "a", type: "insight", payload: { note: "compat note" } });
+
       const second = new TizaRuntime({ stateDir });
-      expect(second.listRuns().map((run) => run.runId)).toContain("run-persist");
-      expect(second.read(undefined, "run-persist")).toHaveLength(1);
-      expect(second.status("run-persist").completed).toContain("security");
-      expect(second.prompt("run-persist", { includeMetadata: true })).toContain("run-persist");
+      expect(second.read(undefined, "run-compat")).toHaveLength(1);
     } finally {
       rmSync(stateDir, { recursive: true, force: true });
     }

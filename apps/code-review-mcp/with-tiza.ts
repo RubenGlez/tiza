@@ -21,13 +21,6 @@ export interface ScenarioResult {
 
 type CB = { type: string; text?: string };
 
-function extractKnownPatterns(storePrompt: string): string[] {
-  return storePrompt
-    .split("\n")
-    .filter((l) => l.startsWith("- ") && !l.includes("**Phase") && !l.includes("**Progress"))
-    .map((l) => l.replace(/^- \*\*[^*]+\*\* — /, "").replace(/^- /, ""));
-}
-
 export async function runWithTiza(
   anthropic: Anthropic,
   fixture: Fixture,
@@ -86,13 +79,13 @@ export async function runWithTiza(
 
   // Agents run autonomously via the Tiza MCP server — no LLM involved
   for (const agent of agents) {
-    // Read current store state to skip known issues
-    const promptResult = await tizaClient.callTool({ name: "tiza_prompt", arguments: {} });
-    const storePrompt = (promptResult.content as CB[])
-      .filter((c) => c.type === "text")
-      .map((c) => c.text ?? "")
-      .join("");
-    const knownPatterns = extractKnownPatterns(storePrompt);
+    // Read structured findings to skip already-known issues
+    const readResult = await tizaClient.callTool({ name: "tiza_read", arguments: { type: "finding" } });
+    const readText = (readResult.content as CB[]).filter((c) => c.type === "text").map((c) => c.text ?? "").join("");
+    let knownPatterns: string[] = [];
+    try {
+      knownPatterns = (JSON.parse(readText) as Array<{ payload: { issue: string } }>).map((e) => e.payload.issue);
+    } catch {}
 
     // Run programmatic scan — no LLM call
     const scanResult = agent.run(fixture.diff, knownPatterns);

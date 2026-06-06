@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.29.0",
-    "@tiza/core": "^0.1.0",
+    "@tiza/core": "workspace:*",
     "zod": "4.4.3"
   },
   "devDependencies": {

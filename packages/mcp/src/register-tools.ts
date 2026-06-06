@@ -1,9 +1,21 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { TizaRuntime, type TizaRuntimeOptions } from "./runtime";
+import { PromptVariants, TizaRuntime, type TizaRuntimeOptions } from "@tiza/core";
 
 const severitySchema = z.enum(["critical", "high", "medium", "low", "info"]);
 const entryTypeSchema = z.enum(["finding", "insight", "decision"]);
+
+const payloadSchemas = {
+  finding: z.object({
+    severity: severitySchema,
+    issue: z.string(),
+    file: z.string().optional(),
+    line: z.number().optional(),
+    suggestion: z.string().optional(),
+  }),
+  insight: z.object({ note: z.string() }),
+  decision: z.object({ note: z.string(), rationale: z.string().optional() }),
+} as const;
 
 const runtime = new TizaRuntime();
 
@@ -128,8 +140,15 @@ export function registerTizaTools(
       run_id: z.string().optional().describe("Run identifier. Defaults to the active run."),
     },
     async ({ agent, type, payload, run_id }) => {
+      const parsed = payloadSchemas[type].safeParse(payload);
+      if (!parsed.success) {
+        return {
+          content: [{ type: "text", text: `Invalid payload for type "${type}": ${parsed.error.message}` }],
+          isError: true,
+        };
+      }
       try {
-        const entry = sharedRuntime.write({ agent, type, payload }, resolveRunId(run_id));
+        const entry = sharedRuntime.write({ agent, type, payload: parsed.data }, resolveRunId(run_id));
         return { content: [{ type: "text", text: JSON.stringify(entry, null, 2) }] };
       } catch (error) {
         return { content: [{ type: "text", text: formatError(error) }], isError: true };
@@ -201,9 +220,10 @@ export function registerTizaTools(
           content: [
             {
               type: "text",
-              text: sharedRuntime.prompt(resolveRunId(run_id), {
-                includeMetadata: Boolean(run_id),
-              }),
+              text: sharedRuntime.prompt(
+                resolveRunId(run_id),
+                run_id ? PromptVariants.withMetadata : PromptVariants.default,
+              ),
             },
           ],
         };

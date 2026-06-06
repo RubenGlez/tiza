@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { TizaRuntime, type TizaRuntimeOptions } from "@tiza/core";
 import { registerTizaTools } from "./register-tools";
-import { TizaRuntime, type TizaRuntimeOptions } from "./runtime";
 
 export interface CreateTizaServerOptions extends TizaRuntimeOptions {}
 
