@@ -60,6 +60,8 @@ Savings compound as agent count grows (same fixture, `temperature: 0`):
 
 Scope note: these numbers compare two architectural policies in the included code-review benchmark: a naive LLM-orchestrated MCP loop with growing history versus a CA-MCP workflow where tools coordinate through Tiza and the LLM only plans and synthesizes. Stronger baselines, including compact-history and cached-history MCP, are the next benchmark-hardening step.
 
+The benchmark suite should be treated as a frozen baseline for the current v1 contract. New Tiza MCP capabilities are additive and should be measured as a separate benchmark generation so the existing results remain comparable.
+
 Run it yourself: `ANTHROPIC_API_KEY=... pnpm benchmark`
 
 ---
@@ -172,6 +174,31 @@ Returns `{ phase, completed, pending }`.
 ### `store.toPrompt()`
 
 Serializes the full store state to Markdown. Ready to inject into an LLM prompt.
+
+---
+
+## Tiza MCP
+
+Tiza ships with a standalone MCP server and a programmatic factory. The MCP is the integration boundary for Harness and other multi-agent systems: it keeps the core store decoupled while exposing run-level operations over MCP.
+
+Legacy tools remain available for the current benchmark path:
+
+- `tiza_init`
+- `tiza_write`
+- `tiza_read`
+- `tiza_done`
+- `tiza_status`
+- `tiza_prompt`
+
+Run-aware tools are additive:
+
+- `tiza_open_run`
+- `tiza_set_active_run`
+- `tiza_list_runs`
+- `tiza_get_run`
+- `tiza_get_stage_context`
+
+Use `run_id` when you want multiple MCPs to interconnect on the same shared context. Omit it to stay on the active legacy run and preserve the existing benchmark behavior.
 
 ---
 
