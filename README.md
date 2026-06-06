@@ -72,6 +72,12 @@ Run it yourself: `ANTHROPIC_API_KEY=... pnpm benchmark`
 npm install @tiza/core
 ```
 
+To use the MCP server from another repo:
+
+```bash
+npm install @tiza/mcp
+```
+
 ---
 
 ## Quick start
@@ -180,6 +186,13 @@ Serializes the full store state to Markdown. Ready to inject into an LLM prompt.
 ## Tiza MCP
 
 Tiza ships with a standalone MCP server and a programmatic factory. The MCP is the integration boundary for Harness and other multi-agent systems: it keeps the core store decoupled while exposing run-level operations over MCP.
+
+The server can be configured through environment variables:
+
+- `TIZA_STATE_DIR` - optional directory for persisted runs and active-run metadata
+- `TIZA_DEFAULT_RUN_ID` - optional fallback run identifier used when no run is active
+
+If `TIZA_STATE_DIR` is not set, the server still works, but it runs in memory only.
 
 Legacy tools remain available for the current benchmark path:
 

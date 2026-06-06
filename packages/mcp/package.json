@@ -1,8 +1,14 @@
 {
   "name": "@tiza/mcp",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "MCP server for the Tiza shared context store",
   "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "bin": {
     "tiza-mcp": "./dist/server.js"
   },
@@ -18,12 +24,13 @@
   },
   "scripts": {
     "build": "tsup",
+    "prepack": "pnpm build",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.29.0",
-    "@tiza/core": "workspace:*",
+    "@tiza/core": "workspace:^0.1.0",
     "zod": "4.4.3"
   },
   "devDependencies": {

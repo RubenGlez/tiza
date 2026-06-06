@@ -1,9 +1,9 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { registerTizaTools } from "./register-tools";
+import { createRuntimeFromEnv, registerTizaTools } from "./register-tools";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-const server = new McpServer({ name: "tiza", version: "0.2.0" });
-registerTizaTools(server);
+const server = new McpServer({ name: "tiza", version: "0.3.0" });
+registerTizaTools(server, createRuntimeFromEnv());
 
 // ── Start ──────────────────────────────────────────────────────────────────
 const transport = new StdioServerTransport();

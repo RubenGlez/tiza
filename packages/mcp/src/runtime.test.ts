@@ -1,3 +1,6 @@
+import { mkdtempSync, rmSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 import { TizaRuntime } from "./runtime";
 
@@ -96,5 +99,34 @@ describe("TizaRuntime", () => {
     expect(list).toHaveLength(2);
     expect(list.map((run) => run.runId)).toEqual(["run-1", "run-2"]);
     expect(list.every((run) => run.phase === "planning")).toBe(true);
+  });
+
+  it("persists runs when a state directory is configured", () => {
+    const stateDir = mkdtempSync(join(tmpdir(), "tiza-runtime-"));
+
+    try {
+      const first = new TizaRuntime({ stateDir });
+      first.openRun({
+        runId: "run-persist",
+        task: "Persistent task",
+        agents: ["security", "quality"],
+        repoPath: "/repos/persist",
+        batchId: "batch-persist",
+      });
+      first.write({
+        agent: "security",
+        type: "finding",
+        payload: { severity: "high", issue: "persist this finding" },
+      });
+      first.done("security");
+
+      const second = new TizaRuntime({ stateDir });
+      expect(second.listRuns().map((run) => run.runId)).toContain("run-persist");
+      expect(second.read(undefined, "run-persist")).toHaveLength(1);
+      expect(second.status("run-persist").completed).toContain("security");
+      expect(second.prompt("run-persist", { includeMetadata: true })).toContain("run-persist");
+    } finally {
+      rmSync(stateDir, { recursive: true, force: true });
+    }
   });
 });

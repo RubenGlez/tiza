@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { TizaRuntime } from "./runtime";
+import { TizaRuntime, type TizaRuntimeOptions } from "./runtime";
 
 const severitySchema = z.enum(["critical", "high", "medium", "low", "info"]);
 const entryTypeSchema = z.enum(["finding", "insight", "decision"]);
@@ -15,7 +15,10 @@ function resolveRunId(value: string | undefined): string | undefined {
   return value && value.trim().length > 0 ? value : undefined;
 }
 
-export function registerTizaTools(server: McpServer, sharedRuntime: TizaRuntime = runtime): TizaRuntime {
+export function registerTizaTools(
+  server: McpServer,
+  sharedRuntime: TizaRuntime = runtime,
+): TizaRuntime {
   server.tool(
     "tiza_init",
     "Initialize the default Tiza shared context store for a new task. This preserves the legacy v1 benchmark path.",
@@ -229,4 +232,11 @@ export function registerTizaTools(server: McpServer, sharedRuntime: TizaRuntime 
   );
 
   return sharedRuntime;
+}
+
+export function createRuntimeFromEnv(env: NodeJS.ProcessEnv = process.env): TizaRuntime {
+  return new TizaRuntime({
+    stateDir: env.TIZA_STATE_DIR?.trim() || null,
+    defaultRunId: env.TIZA_DEFAULT_RUN_ID?.trim() || undefined,
+  } satisfies TizaRuntimeOptions);
 }
