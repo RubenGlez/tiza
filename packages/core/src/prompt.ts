@@ -1,4 +1,3 @@
-import { SEVERITY_ORDER } from "./types";
 import type {
   DecisionPayload,
   Entry,
@@ -7,6 +6,7 @@ import type {
   Severity,
   StoreStatus,
 } from "./types";
+import { SEVERITY_ORDER } from "./types";
 
 const SEVERITY_EMOJI: Record<Severity, string> = {
   critical: "🔴",

@@ -1,6 +1,6 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { PromptVariants, TizaRuntime, type TizaRuntimeOptions } from "@tiza/core";
+import { z } from "zod";
 
 const severitySchema = z.enum(["critical", "high", "medium", "low", "info"]);
 const entryTypeSchema = z.enum(["finding", "insight", "decision"]);
@@ -102,16 +102,11 @@ export function registerTizaTools(
     },
   );
 
-  server.tool(
-    "tiza_list_runs",
-    "List known runs and their current phases.",
-    {},
-    async () => {
-      return {
-        content: [{ type: "text", text: JSON.stringify(sharedRuntime.listRuns(), null, 2) }],
-      };
-    },
-  );
+  server.tool("tiza_list_runs", "List known runs and their current phases.", {}, async () => {
+    return {
+      content: [{ type: "text", text: JSON.stringify(sharedRuntime.listRuns(), null, 2) }],
+    };
+  });
 
   server.tool(
     "tiza_get_run",
@@ -121,7 +116,11 @@ export function registerTizaTools(
     },
     async ({ run_id }) => {
       try {
-        return { content: [{ type: "text", text: JSON.stringify(sharedRuntime.snapshot(run_id), null, 2) }] };
+        return {
+          content: [
+            { type: "text", text: JSON.stringify(sharedRuntime.snapshot(run_id), null, 2) },
+          ],
+        };
       } catch (error) {
         return { content: [{ type: "text", text: formatError(error) }], isError: true };
       }
@@ -143,12 +142,17 @@ export function registerTizaTools(
       const parsed = payloadSchemas[type].safeParse(payload);
       if (!parsed.success) {
         return {
-          content: [{ type: "text", text: `Invalid payload for type "${type}": ${parsed.error.message}` }],
+          content: [
+            { type: "text", text: `Invalid payload for type "${type}": ${parsed.error.message}` },
+          ],
           isError: true,
         };
       }
       try {
-        const entry = sharedRuntime.write({ agent, type, payload: parsed.data }, resolveRunId(run_id));
+        const entry = sharedRuntime.write(
+          { agent, type, payload: parsed.data },
+          resolveRunId(run_id),
+        );
         return { content: [{ type: "text", text: JSON.stringify(entry, null, 2) }] };
       } catch (error) {
         return { content: [{ type: "text", text: formatError(error) }], isError: true };

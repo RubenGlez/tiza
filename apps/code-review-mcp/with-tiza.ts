@@ -80,11 +80,19 @@ export async function runWithTiza(
   // Agents run autonomously via the Tiza MCP server — no LLM involved
   for (const agent of agents) {
     // Read structured findings to skip already-known issues
-    const readResult = await tizaClient.callTool({ name: "tiza_read", arguments: { type: "finding" } });
-    const readText = (readResult.content as CB[]).filter((c) => c.type === "text").map((c) => c.text ?? "").join("");
+    const readResult = await tizaClient.callTool({
+      name: "tiza_read",
+      arguments: { type: "finding" },
+    });
+    const readText = (readResult.content as CB[])
+      .filter((c) => c.type === "text")
+      .map((c) => c.text ?? "")
+      .join("");
     let knownPatterns: string[] = [];
     try {
-      knownPatterns = (JSON.parse(readText) as Array<{ payload: { issue: string } }>).map((e) => e.payload.issue);
+      knownPatterns = (JSON.parse(readText) as Array<{ payload: { issue: string } }>).map(
+        (e) => e.payload.issue,
+      );
     } catch {}
 
     // Run programmatic scan — no LLM call

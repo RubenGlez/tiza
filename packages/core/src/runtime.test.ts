@@ -1,8 +1,13 @@
 import { mkdtempSync, rmSync } from "node:fs";
-import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { FilePersistenceBackend, MemoryPersistenceBackend, PromptVariants, TizaRuntime } from "./runtime";
+import {
+  FilePersistenceBackend,
+  MemoryPersistenceBackend,
+  PromptVariants,
+  TizaRuntime,
+} from "./runtime";
 
 describe("TizaRuntime", () => {
   it("opens and reads isolated runs", () => {

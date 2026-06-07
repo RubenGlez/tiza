@@ -3,8 +3,8 @@ import {
   existsSync,
   mkdirSync,
   openSync,
-  readFileSync,
   readdirSync,
+  readFileSync,
   renameSync,
   unlinkSync,
   writeFileSync,
@@ -25,9 +25,15 @@ export interface PersistenceBackend {
 
 export class NullPersistenceBackend implements PersistenceBackend {
   saveRun(): void {}
-  loadRun(): null { return null; }
-  listRunIds(): string[] { return []; }
-  loadActiveRunId(): null { return null; }
+  loadRun(): null {
+    return null;
+  }
+  listRunIds(): string[] {
+    return [];
+  }
+  loadActiveRunId(): null {
+    return null;
+  }
   saveActiveRunId(): void {}
 }
 
@@ -80,7 +86,11 @@ export class FilePersistenceBackend implements PersistenceBackend {
     return readdirSync(runsDir, { withFileTypes: true })
       .filter((e) => e.isFile() && e.name.endsWith(".json"))
       .map((e) => {
-        try { return decodeURIComponent(e.name.slice(0, -5)); } catch { return null; }
+        try {
+          return decodeURIComponent(e.name.slice(0, -5));
+        } catch {
+          return null;
+        }
       })
       .filter((id): id is string => id !== null);
   }
@@ -99,7 +109,11 @@ export class FilePersistenceBackend implements PersistenceBackend {
 
   private readJsonFile<T>(filePath: string): T | null {
     if (!existsSync(filePath)) return null;
-    try { return JSON.parse(readFileSync(filePath, "utf8")) as T; } catch { return null; }
+    try {
+      return JSON.parse(readFileSync(filePath, "utf8")) as T;
+    } catch {
+      return null;
+    }
   }
 
   private writeJsonAtomic(filePath: string, value: unknown): void {
@@ -116,8 +130,16 @@ export class FilePersistenceBackend implements PersistenceBackend {
       handle = openSync(lockPath, "wx");
       fn();
     } finally {
-      if (handle !== null) { try { closeSync(handle); } catch {} }
-      if (existsSync(lockPath)) { try { unlinkSync(lockPath); } catch {} }
+      if (handle !== null) {
+        try {
+          closeSync(handle);
+        } catch {}
+      }
+      if (existsSync(lockPath)) {
+        try {
+          unlinkSync(lockPath);
+        } catch {}
+      }
     }
   }
 
@@ -207,7 +229,8 @@ export const PromptVariants = {
     ].filter((l): l is string => l !== null);
     return [lines.join("\n"), storePrompt].join("\n\n");
   },
-  stage: (stage: string): PromptVariant =>
+  stage:
+    (stage: string): PromptVariant =>
     (storePrompt, meta) =>
       [
         `# Stage\n${stage}`,
@@ -282,7 +305,11 @@ export class TizaRuntime {
     return this.snapshot(runId);
   }
 
-  listRuns(): Array<Pick<RunSnapshot, "runId" | "repoPath" | "batchId" | "task" | "createdAt" | "updatedAt"> & { phase: StoreStatus["phase"] }> {
+  listRuns(): Array<
+    Pick<RunSnapshot, "runId" | "repoPath" | "batchId" | "task" | "createdAt" | "updatedAt"> & {
+      phase: StoreStatus["phase"];
+    }
+  > {
     return [...this.runs.values()]
       .sort((a, b) => a.createdAt - b.createdAt)
       .map((run) => ({
