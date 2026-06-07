@@ -53,8 +53,11 @@ apps/code-review-mcp/
   without-tiza.ts         — naive LLM-orchestrated MCP scenario
   without-tiza-compact.ts — compact-history MCP scenario
   agents.ts               — 8 programmatic scanner agents
+  mcp-bridge.ts           — utilities bridging MCP protocol ↔ Anthropic Claude API
   fixtures/               — PR diff fixtures for benchmark
   tools/                  — individual scanner implementations
+  servers/                — MCP servers spawned by benchmark scenarios
+    scanner-server.ts     — stdio MCP server exposing all 8 scanner tools
   benchmark-results/      — timestamped JSON artifacts from benchmark runs
 ```
 

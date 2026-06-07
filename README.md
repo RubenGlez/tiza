@@ -30,37 +30,38 @@ Agent 3: finds same issues Agent 3: reads store → skips known issues
 LLM synthesizes raw dumps  LLM reads store.toPrompt() → structured synthesis
 ```
 
-The benchmark (orchestrator LLM + 3 programmatic MCP tools, `claude-haiku-4-5`, `temperature: 0`):
+The benchmark (orchestrator LLM + 3 programmatic MCP tools, `claude-haiku-4-5`, `temperature: 0`, auth-module fixture):
 
-| Metric | Without Tiza | With Tiza |
-|--------|-------------|-----------|
-| LLM calls | 4 | **2** |
-| Input tokens | 10,358 | **2,267** |
-| Total tokens | 12,284 | **3,112** |
+| Metric | Naive MCP | Compact MCP | With Tiza |
+|--------|-----------|-------------|-----------|
+| LLM calls | 4 | 4 | **2** |
+| Input tokens | 11,985 | 5,420 | **3,069** |
+| Total tokens | 13,880 | 7,537 | **3,688** |
 
-The LLM is called once per agent in traditional MCP — each call re-processes the full growing history (1,752 → 2,519 → 3,185 → 2,902 tokens). With Tiza: a 67-token planning call, then tools run autonomously, then a 2,200-token synthesis reading `store.toPrompt()`.
+**Naive MCP** routes every tool call through the LLM, accumulating a growing conversation history. **Compact MCP** trims tool output after each call — a competent orchestrator pattern that avoids naive context bloat. **Tiza** eliminates the per-agent LLM calls entirely: one planning call seeds the store, tools run autonomously, one synthesis call reads `store.toPrompt()`.
 
-Results are consistent across PR types:
+Results are consistent across PR types (vs naive MCP / vs compact MCP):
 
-| PR fixture | Input tokens saved |
-|------------|--------------------|
-| auth-module | 74.4% |
-| data-layer | 71.6% |
-| api-routes | 74.8% |
+| PR fixture | vs Naive | vs Compact |
+|------------|----------|------------|
+| auth-module | 74.4% fewer input tokens | 43.4% fewer |
+| data-layer | 71.6% fewer input tokens | 46.9% fewer |
+| api-routes | 74.8% fewer input tokens | 49.6% fewer |
+| full-auth-system | 80.5% fewer input tokens | 39.9% fewer |
 
 Savings compound as agent count grows (same fixture, `temperature: 0`):
 
-| Agent count | Input tokens saved |
-|-------------|--------------------|
-| 3 agents | 74.4% |
-| 5 agents | 82.7% |
-| 8 agents | **89.6%** |
+| Agent count | vs Naive | vs Compact |
+|-------------|----------|------------|
+| 3 agents | 74.4% fewer input tokens | 43.4% fewer |
+| 5 agents | 82.7% fewer input tokens | 63.2% fewer |
+| 8 agents | **89.6% fewer input tokens** | **78.4% fewer** |
 
-**50% fewer LLM calls. 74–90% fewer input tokens depending on agent count.**
+**50% fewer LLM calls. 74–90% fewer input tokens vs naive, 43–78% vs compact MCP, depending on agent count.**
 
-Scope note: these numbers compare two architectural policies in the included code-review benchmark: a naive LLM-orchestrated MCP loop with growing history versus a CA-MCP workflow where tools coordinate through Tiza and the LLM only plans and synthesizes. Stronger baselines, including compact-history and cached-history MCP, are the next benchmark-hardening step.
+Scope note: these numbers compare three architectural policies in the included code-review benchmark. Results are specific to this scenario and fixture set.
 
-The benchmark suite should be treated as a frozen baseline for the current v1 contract. New Tiza MCP capabilities are additive and should be measured as a separate benchmark generation so the existing results remain comparable.
+New Tiza MCP capabilities are additive and should be measured as a separate benchmark generation so the existing results remain comparable.
 
 Run it yourself: `ANTHROPIC_API_KEY=... pnpm benchmark`
 
@@ -247,6 +248,16 @@ Use `run_id` when you want multiple MCPs to interconnect on the same shared cont
 ## Examples
 
 See [`apps/code-review-mcp`](./apps/code-review-mcp) for a full benchmark comparing traditional MCP vs CA-MCP with Tiza. Uses real MCP servers over stdio — the exact architecture the paper describes.
+
+---
+
+## What this does not prove
+
+- **That Tiza is faster for all multi-agent tasks.** The benchmark is a code-review scenario with programmatic (non-LLM) scanners. Tasks where agents need iterative LLM reasoning may not follow the same pattern.
+- **That token savings equal cost savings.** Prompt caching, model pricing tiers, and output token ratios all affect real cost. Measure your own workload.
+- **That CA-MCP eliminates coordination overhead entirely.** Tiza reduces the LLM's role in coordination; it does not eliminate it. The synthesis call still reads all findings.
+- **That the compact-history baseline is the best possible traditional orchestrator.** Prompt caching, parallel tool calls, and other techniques could further reduce naive MCP overhead.
+- **That quality is unaffected.** The benchmark reports token counts and finding counts. A systematic quality rubric (recall, false positive rate, actionability) is the next validation step.
 
 ---
 
