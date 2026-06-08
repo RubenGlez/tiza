@@ -249,6 +249,10 @@ Use `run_id` when you want multiple MCPs to interconnect on the same shared cont
 
 See [`apps/code-review-mcp`](./apps/code-review-mcp) for a full benchmark comparing traditional MCP vs CA-MCP with Tiza. Uses real MCP servers over stdio — the exact architecture the paper describes.
 
+### Claude Code plugin
+
+[`apps/tiza-plugin`](./apps/tiza-plugin) is a Claude Code plugin that ships four multi-agent skills built on `@tiza/mcp`: `/tiza-review`, `/tiza-investigate`, `/tiza-debug`, and `/tiza-plan`. Installing it auto-configures the MCP server and adds the skills as slash commands. Each skill is a live demonstration of the CA-MCP coordination pattern.
+
 ---
 
 ## What this does not prove

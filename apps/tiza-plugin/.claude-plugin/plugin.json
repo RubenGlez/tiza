@@ -1,0 +1,17 @@
+{
+  "name": "tiza",
+  "displayName": "Tiza",
+  "description": "Multi-agent coordination skills powered by the Tiza Shared Context Store. Includes /tiza-review, /tiza-investigate, /tiza-debug, and /tiza-plan — workflows that show real token and call savings vs naive MCP coordination.",
+  "author": {
+    "name": "Ruben Glez"
+  },
+  "homepage": "https://github.com/RubenGlez/tiza",
+  "repository": "https://github.com/RubenGlez/tiza",
+  "skills": "./skills/",
+  "mcpServers": {
+    "tiza": {
+      "command": "npx",
+      "args": ["-y", "tiza-mcp"]
+    }
+  }
+}
