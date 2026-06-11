@@ -13,7 +13,7 @@ npm install @tiza/mcp
 ## Run
 
 ```bash
-npx tiza-mcp
+npx @tiza/mcp
 ```
 
 The server speaks MCP over `stdio`, so it can be wired into Claude Code, Codex, or any MCP client that supports stdio transports.
@@ -58,7 +58,7 @@ Run-aware tools:
 ## Compatibility notes
 
 - `tiza_init` and the default active run preserve the benchmark v1 behavior.
-- Run-aware tools are additive and should be used for multi-repo or multi-process integrations.
+- Run-aware tools are additive and should be used for multi-repo or multi-run integrations.
 - The package targets Node.js 22 or newer.
 
 ## Example config
@@ -69,7 +69,8 @@ Claude Code / Codex style MCP configs typically point to the binary:
 {
   "mcpServers": {
     "tiza": {
-      "command": "tiza-mcp",
+      "command": "npx",
+      "args": ["-y", "@tiza/mcp"],
       "env": {
         "TIZA_STATE_DIR": "/path/to/tiza-state"
       }

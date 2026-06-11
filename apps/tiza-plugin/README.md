@@ -29,7 +29,7 @@ Or configure the MCP server manually and copy the skills wherever your Claude Co
   "mcpServers": {
     "tiza": {
       "command": "npx",
-      "args": ["-y", "tiza-mcp"]
+      "args": ["-y", "@tiza/mcp"]
     }
   }
 }

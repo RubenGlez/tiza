@@ -11,7 +11,7 @@
   "mcpServers": {
     "tiza": {
       "command": "npx",
-      "args": ["-y", "tiza-mcp"]
+      "args": ["-y", "@tiza/mcp"]
     }
   }
 }
