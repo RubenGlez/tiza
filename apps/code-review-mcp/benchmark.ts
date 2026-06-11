@@ -30,9 +30,16 @@ import { runWithoutTizaCompact } from "./without-tiza-compact";
 
 const MODEL = "claude-haiku-4-5-20251001";
 
+// Load the repo-root .env if present (does not override variables already set in the shell)
+try {
+  process.loadEnvFile(path.join(import.meta.dirname, "../../.env"));
+} catch {}
+
 const apiKey = process.env.ANTHROPIC_API_KEY;
 if (!apiKey) {
-  console.error("Error: ANTHROPIC_API_KEY is not set.");
+  console.error(
+    "Error: ANTHROPIC_API_KEY is not set. Export it or put it in .env at the repo root.",
+  );
   process.exit(1);
 }
 
