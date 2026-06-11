@@ -33,7 +33,7 @@ export function registerTizaTools(
 ): TizaRuntime {
   server.tool(
     "tiza_init",
-    "Initialize the default Tiza shared context store for a new task. This preserves the legacy v1 benchmark path.",
+    'Initialize the default Tiza shared context store for a new task. Resets the shared "default" run — prefer tiza_open_run with an explicit run_id when workflows may run concurrently.',
     {
       task: z.string().describe("Description of the task"),
       agents: z.array(z.string()).describe("Identifiers of the contributing agents"),

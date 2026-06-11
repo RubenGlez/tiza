@@ -39,17 +39,22 @@ Or configure the MCP server manually and copy the skills wherever your Claude Co
 
 | Skill | Use case |
 |-------|----------|
-| `/tiza-review` | PR or code review — security, quality, tests, performance passes in sequence |
-| `/tiza-investigate` | Explain a codebase or module — file structure, implementation, tests, deps |
-| `/tiza-debug` | Bug or incident triage — error trace, recent changes, test state, root cause |
-| `/tiza-plan` | Choose between two technical options — independent research, then structured comparison |
+| `/tiza-review` | PR or code review — security, quality, tests, performance specialists in parallel |
+| `/tiza-investigate` | Explain a codebase or module — file-mapper first, then implementation, tests, deps in parallel |
+| `/tiza-debug` | Bug or incident triage — error tracer first, then recent changes and test state in parallel |
+| `/tiza-plan` | Choose between two technical options — each researched by an isolated subagent, then compared |
 
-Each skill follows the same pattern: initialize a Tiza store, run specialist phases that write structured findings, synthesize from the store digest. This is the CA-MCP coordination architecture — see the [benchmark](../code-review-mcp) for numbers on why it uses fewer LLM calls and tokens than naive MCP coordination.
+Each skill follows the same pattern: the orchestrator opens a Tiza run, spawns specialists as Claude Code subagents that write typed findings to the shared store from their own context windows, then synthesizes from the store digest. This is the CA-MCP coordination architecture — see the [benchmark](../code-review-mcp) for numbers on why it uses fewer LLM calls and tokens than naive MCP coordination.
 
 ## Why these workflows benefit from Tiza
 
-Without Tiza, a multi-specialist review means the orchestrator LLM retransmits every previous agent's output to the next one. Context grows with each step.
+Without Tiza, a multi-specialist review means every specialist's raw analysis — diffs read, files explored, git logs walked — accumulates in one conversation, and the synthesis step pays for all of it again.
 
-With Tiza, each specialist writes typed findings (severity, file, line, suggestion) to the shared store and marks itself done. The synthesizer reads `store.toPrompt()` — a compact Markdown digest — rather than a growing conversation. The LLM is involved twice: planning and synthesis.
+With Tiza, each specialist runs as a subagent: it writes typed findings (severity, file, line, suggestion) to the shared store, marks itself done, and returns a one-line confirmation. Its context is then discarded. The synthesizer reads `store.toPrompt()` — a compact Markdown digest — rather than a grown conversation. Subagents share the session's MCP server process, so the in-memory store is the coordination point.
+
+Two extra properties fall out of this:
+
+- **Parallelism** — independent specialists run concurrently instead of in sequence.
+- **Real isolation** — `/tiza-plan`'s two option researchers structurally cannot see each other's analysis, so anchoring-bias prevention doesn't rely on the model's discipline.
 
 The savings scale with agent count. See the [benchmark results](../../README.md#the-solution) for measured numbers.

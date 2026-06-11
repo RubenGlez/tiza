@@ -1,11 +1,11 @@
 ---
 name: tiza-investigate
-description: Structured codebase investigation using Tiza. Four specialist agents (file structure, implementation, tests, dependencies) each write discoveries to the shared store, so later agents build on earlier ones without the orchestrator retransmitting raw file content. Use when asked to explain, map, or document a codebase, feature, or module.
+description: Structured codebase investigation using Tiza. A file-mapper subagent charts the territory first, then implementation, tests, and deps specialists run as parallel subagents that build on its findings through the shared store — the orchestrator only ever sees the compact digest. Use when asked to explain, map, or document a codebase, feature, or module.
 ---
 
 # Tiza Investigate
 
-Structured investigation where each specialist agent writes what it discovers to the Tiza store. Later agents read earlier findings — they skip what's already known and build on it, rather than starting cold.
+Specialists run as **subagents** that write discoveries to the Tiza store. The file-mapper goes first; the other three run in parallel and read its entries from the store to orient themselves. Raw file contents stay inside each subagent's context — the orchestrator (you) synthesizes from the digest alone.
 
 ## Step 1: Clarify the target
 
@@ -15,52 +15,49 @@ Ask the user (or infer from context):
 
 State the investigation target clearly before proceeding.
 
-## Step 2: Initialize the store
+## Step 2: Open the run
 
-Call `tiza_init` with:
+Call `tiza_open_run` with:
+- `run_id`: `investigate-<short-slug>-<YYYYMMDD-HHmmss>`
 - `task`: what is being investigated (e.g. "Investigate: authentication flow in packages/auth")
 - `agents`: `["file-mapper", "implementation", "tests", "deps"]`
+- `repo_path`: absolute path to the repo
 
-## Step 3: Run each specialist
+Do not use `tiza_init` — it resets a shared default run.
 
-### file-mapper
-Map the structure without reading implementation details yet.
-- Use `find`, `ls`, or `Glob` to list directories and key files
-- Identify entry points, main modules, config files, and anything that looks like a boundary
-- For each structural observation worth recording, call `tiza_write` with:
-  - `agent`: `"file-mapper"`
-  - `type`: `"insight"`
-  - `payload.note`: the observation (e.g. "Entry point is src/index.ts, exports three public functions")
-- Call `tiza_done` with `agent: "file-mapper"`
+## Step 3: Spawn the specialists
 
-### implementation
-Read the actual code. Start by calling `tiza_read` to see what file-mapper found — use that to prioritize which files to read first.
-- Read the most important files identified by file-mapper
-- Record what each key function/class/module does
-- Note non-obvious decisions, surprising patterns, or missing pieces
-- Call `tiza_write` for each insight worth capturing
-- If you find something that looks wrong or risky, use `type: "finding"` instead
-- Call `tiza_done` with `agent: "implementation"`
+All subagents are general-purpose, default model. Every prompt starts with this preamble (fill in `{AGENT}`, `{RUN_ID}`, `{TARGET}`):
 
-### tests
-Assess test coverage and quality. Call `tiza_read` first to orient from what file-mapper and implementation found.
-- Find test files (look for `*.test.*`, `*.spec.*`, `__tests__/`, `test/`)
-- Note what is well-tested, what is missing, and what test patterns are used
-- Call `tiza_write` for coverage gaps (use `type: "finding"`, severity `"medium"` or `"low"`) and observations (use `type: "insight"`)
-- Call `tiza_done` with `agent: "tests"`
+```
+You are the {AGENT} specialist in a Tiza-coordinated codebase investigation. Run ID: "{RUN_ID}".
+Target: {TARGET}.
 
-### deps
-Assess the dependency picture. Call `tiza_read` first.
-- Read `package.json`, `go.mod`, `pyproject.toml`, or equivalent
-- Note key dependencies, their versions, anything outdated or unusual
-- Flag anything that looks like a supply-chain risk or unnecessary bloat as a `finding`
-- Write other dep observations as `insight`
-- Call `tiza_done` with `agent: "deps"`
+The Tiza MCP tools (tiza_write, tiza_read, tiza_done) may be deferred in your session — if so,
+load them first with ToolSearch (query "tiza").
+
+Write at most 8 entries, most important first. Payload shapes (Zod-validated):
+- finding: { severity: "critical"|"high"|"medium"|"low"|"info", issue, file?, line?, suggestion? }
+- insight: { note }
+When finished, call tiza_done with run_id: "{RUN_ID}", agent: "{AGENT}", then reply with exactly
+one line: `done: {AGENT} — N entries`. Do not include your analysis in the reply.
+```
+
+**First, spawn file-mapper alone and wait for it:**
+
+- **file-mapper**: Map the structure without reading implementation. Use Glob/ls to chart directories, entry points, main modules, config files, boundaries. Write each structural observation as an insight (e.g. "Entry point is src/index.ts, exports three public functions"). Prioritize: a later agent should know *where to look first* from your entries alone.
+
+**Then spawn the other three in parallel (one message, three Agent calls).** Each is told: *Before doing anything else, call `tiza_read` with run_id "{RUN_ID}" to see what file-mapper (and any other finished specialist) recorded — use it to prioritize, don't re-derive it.*
+
+- **implementation**: Read the most important files identified by file-mapper. Record what each key function/class/module does as insights; non-obvious decisions and surprising patterns too. Anything that looks wrong or risky is a finding with file + line.
+- **tests**: Find test files (`*.test.*`, `*.spec.*`, `__tests__/`, `test/`). Record what is well-tested and which test patterns are used as insights; coverage gaps as findings (severity "medium" or "low", name the untested file).
+- **deps**: Read `package.json`, `go.mod`, `pyproject.toml`, or equivalent. Key dependencies and versions as insights; anything outdated, unusually risky, or unnecessary as a finding.
 
 ## Step 4: Synthesize
 
-1. Call `tiza_prompt` to get the full store digest.
-2. Produce a structured summary:
+1. Call `tiza_status` with the run_id — if any agent is pending, its subagent died before `tiza_done`; re-spawn just that one before synthesizing.
+2. Call `tiza_prompt` with the run_id to get the digest.
+3. Produce a structured summary:
    - **What it is**: one paragraph, plain language
    - **How it works**: key data flows and entry points
    - **What's well done**
@@ -68,3 +65,13 @@ Assess the dependency picture. Call `tiza_read` first.
    - **Questions to follow up**: gaps the investigation surfaced
 
 Keep it tight. A senior dev should be able to read the summary in 3 minutes and understand the area.
+
+## Fallback: no subagent tool available
+
+Run the four specialist phases yourself, sequentially (file-mapper → implementation → tests → deps), in this conversation, including all store writes, then synthesize as in Step 4.
+
+## If something fails
+
+- Tiza tools unavailable (server not connected): tell the user, and offer a plain investigation without the store.
+- `tiza_write` rejected: fix the payload to match the shapes above and retry once.
+- A subagent returns without its `done: ...` line: check `tiza_status` / `tiza_read`; re-run only what's missing.

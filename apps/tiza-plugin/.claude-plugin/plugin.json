@@ -1,7 +1,7 @@
 {
   "name": "tiza",
   "displayName": "Tiza",
-  "description": "Multi-agent coordination skills powered by the Tiza Shared Context Store. Includes /tiza-review, /tiza-investigate, /tiza-debug, and /tiza-plan — workflows that show real token and call savings vs naive MCP coordination.",
+  "description": "Multi-agent coordination skills powered by the Tiza Shared Context Store. Includes /tiza-review, /tiza-investigate, /tiza-debug, and /tiza-plan — parallel-subagent workflows that coordinate through the store instead of the conversation, with real token and call savings vs naive MCP coordination.",
   "author": {
     "name": "Ruben Glez"
   },
