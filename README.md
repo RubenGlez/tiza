@@ -197,18 +197,19 @@ import { TizaRuntime } from "@tiza/core"
 
 const runtime = new TizaRuntime({ stateDir: "/tmp/tiza" })
 
-const store = runtime.openRun("pr-142", {
+runtime.openRun({
+  runId: "pr-142",
   task: "Review PR #142 - Add user authentication",
   agents: ["security", "quality", "tests"]
 })
 
-store.write({
+runtime.write({
   agent: "security",
   type: "finding",
   payload: { severity: "high", file: "auth.ts", line: 42, issue: "JWT secret hardcoded", suggestion: "Move to environment variable" }
 })
 
-console.log(store.toPrompt())
+console.log(runtime.prompt())
 ```
 
 ---

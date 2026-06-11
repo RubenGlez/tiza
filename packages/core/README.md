@@ -51,10 +51,19 @@ import { TizaRuntime } from "@tiza/core";
 
 const runtime = new TizaRuntime({ stateDir: "/tmp/tiza" });
 
-const store = runtime.openRun("pr-142", {
+runtime.openRun({
+  runId: "pr-142",
   task: "Review PR #142",
   agents: ["security", "quality", "tests"],
 });
+
+runtime.write({
+  agent: "security",
+  type: "finding",
+  payload: { severity: "high", issue: "JWT secret hardcoded" },
+});
+
+console.log(runtime.prompt());
 ```
 
 Persistence is pluggable through the `PersistenceBackend` interface. Three implementations are exported: `FilePersistenceBackend` (disk, atomic writes), `MemoryPersistenceBackend`, and `NullPersistenceBackend` (the default). `PromptVariants` provides alternative prompt renderings for runtime-managed runs (`default`, `withMetadata`, `stage(stage)`).
