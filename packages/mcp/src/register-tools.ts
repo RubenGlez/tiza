@@ -129,7 +129,7 @@ export function registerTizaTools(
 
   server.tool(
     "tiza_write",
-    "Write a finding, insight, or decision to a run. Use run_id to interconnect multiple MCPs on the same shared context.",
+    "Write a finding, insight, or decision to a run. Use run_id to target a specific run; agents talking to the same server process share that run's context.",
     {
       agent: z.string().describe("Agent identifier"),
       type: entryTypeSchema.describe("Entry type"),

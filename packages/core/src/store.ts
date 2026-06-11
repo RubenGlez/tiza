@@ -67,9 +67,7 @@ export function createStore(options: CreateStoreOptions): TizaStore {
   function done(agent: AgentId): void {
     assertAgentExists(agent);
 
-    if (completed.includes(agent)) {
-      throw new Error(`Agent "${agent}" already marked as done`);
-    }
+    if (completed.includes(agent)) return;
 
     completed.push(agent);
     const idx = pending.indexOf(agent);

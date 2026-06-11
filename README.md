@@ -241,7 +241,9 @@ Run-aware tools are additive:
 - `tiza_get_run`
 - `tiza_get_stage_context`
 
-Use `run_id` when you want multiple MCPs to interconnect on the same shared context. Omit it to stay on the active legacy run and preserve the existing benchmark behavior.
+Use `run_id` to target a specific named run; all agents and tools talking to the same server process share that run's context. Omit it to stay on the active legacy run and preserve the existing benchmark behavior.
+
+Note on persistence: `TIZA_STATE_DIR` makes runs survive process restarts, but it is not a mechanism for concurrent writers. Each server process caches runs in memory after first load, so two server processes writing to the same state directory will not see each other's writes. Share context by talking to one server process.
 
 ---
 

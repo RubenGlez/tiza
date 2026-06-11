@@ -135,10 +135,14 @@ describe("done", () => {
     expect(() => store.done("b")).toThrow('"b" is not registered');
   });
 
-  it("throws if the agent was already marked done", () => {
-    const store = createStore({ task: "test", agents: ["a"] });
+  it("is a no-op if the agent was already marked done", () => {
+    const store = createStore({ task: "test", agents: ["a", "b"] });
     store.done("a");
-    expect(() => store.done("a")).toThrow('"a" already marked as done');
+    store.done("a");
+    const s = store.status();
+    expect(s.completed).toEqual(["a"]);
+    expect(s.pending).toEqual(["b"]);
+    expect(s.phase).toBe("review");
   });
 
   it("transitions to synthesis only when all agents are done", () => {

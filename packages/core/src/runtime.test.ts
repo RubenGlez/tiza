@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -155,6 +155,27 @@ describe("TizaRuntime", () => {
       expect(second.listRuns().map((r) => r.runId)).toContain("run-disk");
       expect(second.read(undefined, "run-disk")).toHaveLength(1);
       expect(second.status("run-disk").completed).toContain("security");
+    } finally {
+      rmSync(stateDir, { recursive: true, force: true });
+    }
+  });
+
+  it("fails on a held lock without deleting the other holder's lock file", () => {
+    const stateDir = mkdtempSync(join(tmpdir(), "tiza-runtime-lock-"));
+
+    try {
+      const backend = new FilePersistenceBackend(stateDir);
+      const runtime = new TizaRuntime({ backend });
+      runtime.openRun({ runId: "run-lock", task: "Lock task", agents: ["a"] });
+
+      const lockPath = join(stateDir, "runs", `${encodeURIComponent("run-lock")}.json.lock`);
+      mkdirSync(join(stateDir, "runs"), { recursive: true });
+      writeFileSync(lockPath, "");
+
+      expect(() =>
+        runtime.write({ agent: "a", type: "insight", payload: { note: "blocked" } }, "run-lock"),
+      ).toThrow("locked by another process");
+      expect(existsSync(lockPath)).toBe(true);
     } finally {
       rmSync(stateDir, { recursive: true, force: true });
     }

@@ -125,21 +125,21 @@ export class FilePersistenceBackend implements PersistenceBackend {
   private withLock(filePath: string, fn: () => void): void {
     const lockPath = `${filePath}.lock`;
     this.ensureDirectory(dirname(lockPath));
-    let handle: number | null = null;
+    let handle: number;
     try {
       handle = openSync(lockPath, "wx");
+    } catch (error) {
+      throw new Error(`State file "${filePath}" is locked by another process`, { cause: error });
+    }
+    try {
       fn();
     } finally {
-      if (handle !== null) {
-        try {
-          closeSync(handle);
-        } catch {}
-      }
-      if (existsSync(lockPath)) {
-        try {
-          unlinkSync(lockPath);
-        } catch {}
-      }
+      try {
+        closeSync(handle);
+      } catch {}
+      try {
+        unlinkSync(lockPath);
+      } catch {}
     }
   }
 
