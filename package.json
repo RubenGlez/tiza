@@ -12,7 +12,7 @@
     "lint": "biome lint .",
     "format": "biome format --write .",
     "check": "biome check .",
-    "benchmark": "pnpm --filter code-review-mcp-example benchmark",
+    "benchmark": "pnpm build && pnpm --filter code-review-mcp-example benchmark",
     "release:core": "node scripts/release.mjs core",
     "release:mcp": "node scripts/release.mjs mcp"
   },
