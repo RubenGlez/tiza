@@ -14,7 +14,7 @@ CA-MCP beats a naive, context-accumulating baseline. **But the advantage is cont
 
 So we reproduce the paper's **direction** (CA-MCP beats naive MCP) but not its **attribution** (that the store is the *source* of the gain). The store is a convenient packaging of good context discipline, not a distinct mechanism — with a boundary condition: its theoretical advantages (persistence, selective reads, no re-serialization of large state) should only appear in long-horizon / large-state regimes these experiments don't stress.
 
-Full write-up: [`apps/code-review-mcp/coordination/STUDY.md`](./apps/code-review-mcp/coordination/STUDY.md).
+Full write-up: [`apps/ca-mcp-reproduction/coordination/STUDY.md`](./apps/ca-mcp-reproduction/coordination/STUDY.md).
 
 ---
 
@@ -22,8 +22,8 @@ Full write-up: [`apps/code-review-mcp/coordination/STUDY.md`](./apps/code-review
 
 - [`packages/core`](./packages/core) (`@tiza/core`) — the SCS implementation **under test**: a small, typed, append-only shared store with zero runtime dependencies.
 - [`packages/mcp`](./packages/mcp) (`@tiza/mcp`) — a thin MCP server that exposes the store over the real protocol surface.
-- [`apps/code-review-mcp/coordination`](./apps/code-review-mcp/coordination) — the **reproduction study**: CA-MCP coordination on faithfully reconstructed REALM-Bench planning problems, with deterministic constraint-checkers and a 4-arm ablation.
-- [`apps/code-review-mcp/real-agent`](./apps/code-review-mcp/real-agent) — a companion study on real-agent **code review** (SWE-bench Verified), which independently finds that token savings come from *structured agent output*, not the store.
+- [`apps/ca-mcp-reproduction/coordination`](./apps/ca-mcp-reproduction/coordination) — the **reproduction study**: CA-MCP coordination on faithfully reconstructed REALM-Bench planning problems, with deterministic constraint-checkers and a 4-arm ablation.
+- [`apps/ca-mcp-reproduction/real-agent`](./apps/ca-mcp-reproduction/real-agent) — a companion study on real-agent **code review** (SWE-bench Verified), which independently finds that token savings come from *structured agent output*, not the store.
 
 ---
 
@@ -38,13 +38,13 @@ The coordination study runs the **same real LLM sub-planners** on the same probl
 | `compact` | Sequential; the orchestrator relays only the **current commitments**. A competent orchestrator — the steelman the store must beat. |
 | `store` | Sequential; agents read/write a **persistent shared store** (CA-MCP). |
 
-Metrics are the paper's: **LLM calls** to a valid plan and **failure rate** (a deterministic checker, no LLM judge), over k runs, on two providers. `compact ≈ store` everywhere; `naive` fails the harder problems and burns 2–6× the tokens. See [`STUDY.md`](./apps/code-review-mcp/coordination/STUDY.md) for tables, methodology, and threats to validity.
+Metrics are the paper's: **LLM calls** to a valid plan and **failure rate** (a deterministic checker, no LLM judge), over k runs, on two providers. `compact ≈ store` everywhere; `naive` fails the harder problems and burns 2–6× the tokens. See [`STUDY.md`](./apps/ca-mcp-reproduction/coordination/STUDY.md) for tables, methodology, and threats to validity.
 
 ### Reproduce
 
 ```bash
-OPENAI_API_KEY=...   pnpm tsx apps/code-review-mcp/coordination/runner.ts --model gpt-4o       --runs 5 --cap 12
-DEEPSEEK_API_KEY=... pnpm tsx apps/code-review-mcp/coordination/runner.ts --model deepseek-chat --runs 5 --cap 2
+OPENAI_API_KEY=...   pnpm tsx apps/ca-mcp-reproduction/coordination/runner.ts --model gpt-4o       --runs 5 --cap 12
+DEEPSEEK_API_KEY=... pnpm tsx apps/ca-mcp-reproduction/coordination/runner.ts --model deepseek-chat --runs 5 --cap 2
 ```
 
 The runner retries transient API errors and checkpoints results after each problem. Develop on the cheap models; reserve capable models for final runs.

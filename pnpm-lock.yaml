@@ -15,7 +15,7 @@ importers:
         specifier: ^2.4.16
         version: 2.4.16
 
-  apps/code-review-mcp:
+  apps/ca-mcp-reproduction:
     dependencies:
       '@anthropic-ai/sdk':
         specifier: 0.100.1
