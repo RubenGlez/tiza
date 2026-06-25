@@ -5,7 +5,7 @@ node_modules/
 # Build outputs
 dist/
 *.tsbuildinfo
-apps/code-review-mcp/benchmark-results/
+apps/ca-mcp-reproduction/benchmark-results/
 
 # Environment
 .env

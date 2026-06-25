@@ -1,89 +1,59 @@
 # tiza
 
-> Shared context store for multi-agent MCP systems.
+> A Shared Context Store for multi-agent MCP systems — and an independent reproduction study of the CA-MCP claim it implements.
 
-Tiza is a minimal TypeScript library that implements a **Shared Context Store (SCS)** for multi-agent workflows built on the [Model Context Protocol (MCP)](https://modelcontextprotocol.io). It is based on the CA-MCP architecture proposed in [Jayanti & Han, 2026](https://arxiv.org/abs/2601.11595).
+Tiza is a minimal TypeScript implementation of the **Shared Context Store (SCS)** from the CA-MCP architecture ([Jayanti & Han, 2026](https://arxiv.org/abs/2601.11595)), together with a set of experiments that test — with **real LLM agents** — whether the store actually delivers the benefits the paper attributes to it.
 
----
-
-## The problem
-
-MCP agents are stateless by design. When multiple agents work on the same task — a security reviewer, a quality reviewer, a test reviewer — each one starts from scratch. They don't know what the others discovered. The central LLM has to coordinate every step, retransmitting context repeatedly.
-
-This has a real cost:
-
-- Redundant LLM calls
-- Context loss between steps
-- No cross-agent knowledge transfer
-- Token waste
-
-## The solution
-
-Tiza provides a shared store that all agents can read from and write to. The central LLM only plans at the start and synthesizes at the end. Everything in between is handled by the agents coordinating through the store.
-
-```
-Without Tiza               With Tiza
-─────────────────          ──────────────────────────────
-Agent 1: finds issues      Agent 1: writes findings to store
-Agent 2: finds same issues Agent 2: reads store → skips known issues
-Agent 3: finds same issues Agent 3: reads store → skips known issues
-LLM synthesizes raw dumps  LLM reads store.toPrompt() → structured synthesis
-```
-
-The benchmark (orchestrator LLM + 3 programmatic MCP tools, `claude-haiku-4-5`, `temperature: 0`, auth-module fixture):
-
-| Metric | Naive MCP | Compact MCP | With Tiza |
-|--------|-----------|-------------|-----------|
-| LLM calls | 4 | 4 | **2** |
-| Input tokens | 11,985 | 5,420 | **3,069** |
-| Total tokens | 13,880 | 7,537 | **3,688** |
-
-**Naive MCP** routes every tool call through the LLM, accumulating a growing conversation history. **Compact MCP** trims tool output after each call — a competent orchestrator pattern that avoids naive context bloat. **Tiza** eliminates the per-agent LLM calls entirely: one planning call seeds the store, tools run autonomously, one synthesis call reads `store.toPrompt()`.
-
-Results are consistent across PR types (vs naive MCP / vs compact MCP):
-
-| PR fixture | vs Naive | vs Compact |
-|------------|----------|------------|
-| auth-module | 74.4% fewer input tokens | 43.4% fewer |
-| data-layer | 71.6% fewer input tokens | 46.9% fewer |
-| api-routes | 74.8% fewer input tokens | 49.6% fewer |
-| full-auth-system | 80.5% fewer input tokens | 39.9% fewer |
-
-Savings compound as agent count grows (same fixture, `temperature: 0`):
-
-| Agent count | vs Naive | vs Compact |
-|-------------|----------|------------|
-| 3 agents | 74.4% fewer input tokens | 43.4% fewer |
-| 5 agents | 82.7% fewer input tokens | 63.2% fewer |
-| 8 agents | **89.6% fewer input tokens** | **78.4% fewer** |
-
-**50% fewer LLM calls. 74–90% fewer input tokens vs naive, 43–78% vs compact MCP, depending on agent count.**
-
-Scope note: these numbers compare three architectural policies in the included code-review benchmark. Results are specific to this scenario and fixture set.
-
-New Tiza MCP capabilities are additive and should be measured as a separate benchmark generation so the existing results remain comparable.
-
-Run it yourself: `ANTHROPIC_API_KEY=... pnpm benchmark`
+The honest answer turned out to be more interesting than a straight confirmation, so the repo is now organized around the finding rather than around selling the store.
 
 ---
 
-## Install
+## TL;DR — the finding
 
-Both packages are published on npm:
+CA-MCP beats a naive, context-accumulating baseline. **But the advantage is context discipline, not the shared store.** A competent orchestrator that keeps only compact *current* state (instead of a growing conversation history) matches the store on **LLM calls, failure rate, and tokens** — across two providers (DeepSeek + GPT-4o) and 3–8 coordinating agents. The gap between "compact orchestrator" and "shared store" is essentially zero at every scale we tested.
+
+So we reproduce the paper's **direction** (CA-MCP beats naive MCP) but not its **attribution** (that the store is the *source* of the gain). The store is a convenient packaging of good context discipline, not a distinct mechanism — with a boundary condition: its theoretical advantages (persistence, selective reads, no re-serialization of large state) should only appear in long-horizon / large-state regimes these experiments don't stress.
+
+Full write-up: [`apps/ca-mcp-reproduction/coordination/STUDY.md`](./apps/ca-mcp-reproduction/coordination/STUDY.md).
+
+---
+
+## What's in the repo
+
+- [`packages/core`](./packages/core) (`@tiza/core`) — the SCS implementation **under test**: a small, typed, append-only shared store with zero runtime dependencies.
+- [`packages/mcp`](./packages/mcp) (`@tiza/mcp`) — a thin MCP server that exposes the store over the real protocol surface.
+- [`apps/ca-mcp-reproduction/coordination`](./apps/ca-mcp-reproduction/coordination) — the **reproduction study**: CA-MCP coordination on faithfully reconstructed REALM-Bench planning problems, with deterministic constraint-checkers and a 4-arm ablation.
+- [`apps/ca-mcp-reproduction/real-agent`](./apps/ca-mcp-reproduction/real-agent) — a companion study on real-agent **code review** (SWE-bench Verified), which independently finds that token savings come from *structured agent output*, not the store.
+
+---
+
+## The reproduction study
+
+The coordination study runs the **same real LLM sub-planners** on the same problem and varies only how they coordinate, so any difference is attributable rather than a strawman win:
+
+| Arm | Coordination |
+|---|---|
+| `parallel` | Agents act simultaneously, seeing only a relayed conflict summary. Coordination floor. |
+| `naive` | Sequential; the orchestrator re-transmits the **growing conversation history** each step (the paper's characterization of traditional MCP). |
+| `compact` | Sequential; the orchestrator relays only the **current commitments**. A competent orchestrator — the steelman the store must beat. |
+| `store` | Sequential; agents read/write a **persistent shared store** (CA-MCP). |
+
+Metrics are the paper's: **LLM calls** to a valid plan and **failure rate** (a deterministic checker, no LLM judge), over k runs, on two providers. `compact ≈ store` everywhere; `naive` fails the harder problems and burns 2–6× the tokens. See [`STUDY.md`](./apps/ca-mcp-reproduction/coordination/STUDY.md) for tables, methodology, and threats to validity.
+
+### Reproduce
 
 ```bash
-npm install @tiza/core
+OPENAI_API_KEY=...   pnpm tsx apps/ca-mcp-reproduction/coordination/runner.ts --model gpt-4o       --runs 5 --cap 12
+DEEPSEEK_API_KEY=... pnpm tsx apps/ca-mcp-reproduction/coordination/runner.ts --model deepseek-chat --runs 5 --cap 2
 ```
 
-To use the MCP server from another repo:
-
-```bash
-npm install @tiza/mcp
-```
+The runner retries transient API errors and checkpoints results after each problem. Develop on the cheap models; reserve capable models for final runs.
 
 ---
 
-## Quick start
+## The store (implementation reference)
+
+`@tiza/core` is the implementation we evaluated. It works exactly as described — the finding is about its *advantage*, not its correctness.
 
 ```typescript
 import { createStore } from "@tiza/core"
@@ -93,190 +63,46 @@ const store = createStore({
   agents: ["security", "quality", "tests"]
 })
 
-// Agent writes a finding
 store.write({
-  agent: "security",
-  type: "finding",
-  payload: {
-    severity: "high",
-    file: "auth.ts",
-    line: 42,
-    issue: "JWT secret hardcoded",
-    suggestion: "Move to environment variable"
-  }
-})
-
-// Agent leaves an insight for the others
-store.write({
-  agent: "security",
-  type: "insight",
-  payload: { note: "auth.ts is the critical file — review carefully" }
-})
-
-// Agent marks itself as done
-store.done("security")
-
-// Check status
-console.log(store.status())
-// → { phase: "review", completed: ["security"], pending: ["quality", "tests"] }
-
-// Serialize store to Markdown — ready to inject into a prompt
-console.log(store.toPrompt())
-```
-
-`toPrompt()` produces:
-
-```markdown
-# Task
-Review PR #142 - Add user authentication
-
-## Status
-- **Phase:** review
-- **Progress:** 1 of 3 agents completed
-- **Completed:** security
-- **Pending:** quality, tests
-
-## Findings
-
-### 🟠 High
-- **auth.ts:42** — JWT secret hardcoded
-  - *Suggestion:* Move to environment variable
-  - *Agent:* security · 2026-05-12 10:23:41
-
-## Insights
-- **[security]** auth.ts is the critical file — review carefully
-```
-
----
-
-## API
-
-### `createStore(options)`
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `task` | `string` | Description of the task |
-| `agents` | `string[]` | List of agent identifiers |
-
-### `store.write(entry)`
-
-Appends an entry to the store. The store is **append-only** — entries cannot be modified or deleted.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `agent` | `string` | Agent identifier (must be registered) |
-| `type` | `"finding" \| "insight" \| "decision"` | Entry type |
-| `payload` | `FindingPayload \| InsightPayload \| DecisionPayload` | Entry content |
-
-### `store.read(filter?)`
-
-Returns entries, optionally filtered by `type`, `agent`, or `severity`.
-
-### `store.done(agent)`
-
-Marks an agent as completed and updates the phase automatically.
-
-### `store.status()`
-
-Returns `{ phase, completed, pending }`.
-
-### `store.toPrompt()`
-
-Serializes the full store state to Markdown. Ready to inject into an LLM prompt.
-
----
-
-## TizaRuntime
-
-`TizaRuntime` is also exported from `@tiza/core`. It adds multi-run management on top of `createStore()` — useful when a server or MCP process needs to maintain several independent runs at the same time. Runs can optionally be persisted to disk so they survive process restarts.
-
-File-backed persistence is enabled by passing `stateDir` (or setting the `TIZA_STATE_DIR` environment variable). Without it, runs are held in memory for the lifetime of the process.
-
-```typescript
-import { TizaRuntime } from "@tiza/core"
-
-const runtime = new TizaRuntime({ stateDir: "/tmp/tiza" })
-
-runtime.openRun({
-  runId: "pr-142",
-  task: "Review PR #142 - Add user authentication",
-  agents: ["security", "quality", "tests"]
-})
-
-runtime.write({
   agent: "security",
   type: "finding",
   payload: { severity: "high", file: "auth.ts", line: 42, issue: "JWT secret hardcoded", suggestion: "Move to environment variable" }
 })
 
-console.log(runtime.prompt())
+store.done("security")
+console.log(store.toPrompt()) // compact Markdown digest, ready to inject into a prompt
 ```
 
----
+### API
 
-## Tiza MCP
+- `createStore({ task, agents })` — create an append-only store.
+- `store.write({ agent, type, payload })` — append a `finding` | `insight` | `decision` (entries cannot be modified or deleted).
+- `store.read(filter?)` — read entries, optionally filtered by `type` / `agent` / `severity`.
+- `store.done(agent)` — mark an agent complete; updates the phase.
+- `store.status()` — `{ phase, completed, pending }`.
+- `store.toPrompt()` — serialize the store to Markdown.
 
-Tiza ships with a standalone MCP server and a programmatic factory. The MCP keeps the core store decoupled while exposing run-level operations over MCP.
+`TizaRuntime` (also exported from `@tiza/core`) adds multi-run management and optional disk persistence (`stateDir` or `TIZA_STATE_DIR`). Note: file persistence survives process restarts but is **not** a concurrent-writer mechanism — runs are cached in memory after first load, so share context by talking to one server process.
 
-The server can be configured through environment variables:
+### Tiza MCP
 
-- `TIZA_STATE_DIR` - optional directory for persisted runs and active-run metadata
-- `TIZA_DEFAULT_RUN_ID` - optional fallback run identifier used when no run is active
-
-If `TIZA_STATE_DIR` is not set, the server still works, but it runs in memory only.
-
-Legacy tools remain available for the current benchmark path:
-
-- `tiza_init`
-- `tiza_write`
-- `tiza_read`
-- `tiza_done`
-- `tiza_status`
-- `tiza_prompt`
-
-Run-aware tools are additive:
-
-- `tiza_open_run`
-- `tiza_set_active_run`
-- `tiza_list_runs`
-- `tiza_get_run`
-- `tiza_get_stage_context`
-
-Use `run_id` to target a specific named run; all agents and tools talking to the same server process share that run's context. Omit it to stay on the active legacy run and preserve the existing benchmark behavior.
-
-Note on persistence: `TIZA_STATE_DIR` makes runs survive process restarts, but it is not a mechanism for concurrent writers. Each server process caches runs in memory after first load, so two server processes writing to the same state directory will not see each other's writes. Share context by talking to one server process.
+`@tiza/mcp` is a stdio MCP server exposing the store: `tiza_open_run`, `tiza_write`, `tiza_read`, `tiza_done`, `tiza_status`, `tiza_prompt`, plus run-management tools. Use `run_id` to target a named run shared by all agents talking to the same server process.
 
 ---
 
-## Examples
+## What this does and does not show
 
-See [`apps/code-review-mcp`](./apps/code-review-mcp) for a full benchmark comparing traditional MCP vs CA-MCP with Tiza. Uses real MCP servers over stdio — the exact architecture the paper describes.
-
-### Claude Code plugin
-
-[`apps/tiza-plugin`](./apps/tiza-plugin) is a Claude Code plugin that ships four multi-agent skills built on `@tiza/mcp`: `/tiza-review`, `/tiza-investigate`, `/tiza-debug`, and `/tiza-plan`. Installing it auto-configures the MCP server and adds the skills as slash commands. Each skill is a live demonstration of the CA-MCP coordination pattern.
-
----
-
-## What this does not prove
-
-- **That Tiza is faster for all multi-agent tasks.** The benchmark is a code-review scenario with programmatic (non-LLM) scanners. Tasks where agents need iterative LLM reasoning may not follow the same pattern.
-- **That token savings equal cost savings.** Prompt caching, model pricing tiers, and output token ratios all affect real cost. Measure your own workload.
-- **That CA-MCP eliminates coordination overhead entirely.** Tiza reduces the LLM's role in coordination; it does not eliminate it. The synthesis call still reads all findings.
-- **That the compact-history baseline is the best possible traditional orchestrator.** Prompt caching, parallel tool calls, and other techniques could further reduce naive MCP overhead.
-- **That quality is unaffected.** The benchmark reports token counts and finding counts. A systematic quality rubric (recall, false positive rate, actionability) is the next validation step.
+- **Shows:** with real LLM agents, on two providers, at 3–8 agents, a compact-context orchestrator matches the shared store on the paper's own metrics; the advantage of CA-MCP over a naive baseline is context discipline.
+- **Does not show that the store is useless.** These problems have small, cheap-to-serialize state over short horizons, and we hand the `compact` baseline that state for free. The store's advantages should appear when maintaining compact shared state is itself costly — large state, long horizons, selective reads. Testing that regime is the natural next step.
+- **Does not refute the paper.** CA-MCP does beat naive MCP; we locate *why*.
 
 ---
 
 ## Paper reference
 
-This project is a practical implementation of the CA-MCP architecture described in:
+> Jayanti, M.A. & Han, X.Y. (2026). *Enhancing Model Context Protocol (MCP) with Context-Aware Server Collaboration*. [arXiv:2601.11595](https://arxiv.org/abs/2601.11595).
 
-> Jayanti, M.A. & Han, X.Y. (2026). *Enhancing Model Context Protocol (MCP) with Context-Aware Server Collaboration*. arXiv:2601.11595.
-
-See the paper linked above for the full CA-MCP architecture description.
-
----
+REALM-Bench problems are reconstructed from: Geng & Han (2025), *REALM-Bench*, [arXiv:2502.18836](https://arxiv.org/abs/2502.18836).
 
 ## License
 
