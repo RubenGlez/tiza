@@ -5,13 +5,16 @@
     "typecheck": "tsc --noEmit",
     "benchmark": "tsx benchmark.ts",
     "without-tiza": "tsx without-tiza.ts",
-    "with-tiza": "tsx with-tiza.ts"
+    "with-tiza": "tsx with-tiza.ts",
+    "pilot": "tsx real-agent/pilot.ts",
+    "fetch-swebench": "tsx real-agent/fetch-swebench.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.100.1",
     "@modelcontextprotocol/sdk": "1.29.0",
     "@tiza/core": "workspace:*",
     "@tiza/mcp": "workspace:*",
+    "openai": "6.42.0",
     "zod": "4.4.3"
   },
   "devDependencies": {

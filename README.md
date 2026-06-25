@@ -266,6 +266,25 @@ See [`apps/code-review-mcp`](./apps/code-review-mcp) for a full benchmark compar
 - **That the compact-history baseline is the best possible traditional orchestrator.** Prompt caching, parallel tool calls, and other techniques could further reduce naive MCP overhead.
 - **That quality is unaffected.** The benchmark reports token counts and finding counts. A systematic quality rubric (recall, false positive rate, actionability) is the next validation step.
 
+### Follow-up: real-agent studies
+
+The numbers above come from a benchmark whose agents are deterministic (non-LLM) scanners. Two
+later studies re-run the question with **real LLM agents** and report honestly where the store
+helps and where it doesn't:
+
+- [`apps/code-review-mcp/real-agent`](./apps/code-review-mcp/real-agent) — code review on SWE-bench
+  Verified. The token savings turn out to come from **structured agent output**, not the store:
+  once agents emit structured findings, raw-accumulation and store-digest synthesis cost the same.
+- [`apps/code-review-mcp/coordination`](./apps/code-review-mcp/coordination) — a reproduction of
+  the CA-MCP planning claim on REALM-Bench problems ([`STUDY.md`](./apps/code-review-mcp/coordination/STUDY.md)).
+  Across two providers and 3–8 agents, a competent **compact-context orchestrator matches the
+  shared store**; the win over a naive history-accumulating baseline is context discipline, not the
+  store itself.
+
+These refine — not contradict — the result above: CA-MCP beats a naive baseline, but the
+advantage is attributable to compact context management rather than the store as a distinct
+mechanism. See each study for the boundary conditions where a store should still earn its keep.
+
 ---
 
 ## Paper reference

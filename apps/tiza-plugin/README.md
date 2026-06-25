@@ -1,6 +1,6 @@
 # Tiza Claude Code Plugin
 
-A Claude Code plugin that ships four multi-agent skills powered by `@tiza/mcp`. Installing it auto-configures the Tiza MCP server and adds four slash commands.
+A Claude Code plugin that ships five multi-agent skills powered by `@tiza/mcp`. Installing it auto-configures the Tiza MCP server and adds five slash commands.
 
 ## Install
 
@@ -43,6 +43,7 @@ Or configure the MCP server manually and copy the skills wherever your Claude Co
 | `/tiza-investigate` | Explain a codebase or module — file-mapper first, then implementation, tests, deps in parallel |
 | `/tiza-debug` | Bug or incident triage — error tracer first, then recent changes and test state in parallel |
 | `/tiza-plan` | Choose between two technical options — each researched by an isolated subagent, then compared |
+| `/tiza-coordinate` | Interdependent multi-agent planning (assignment, scheduling, routing) — sub-planners read current commitments from the store and write their own, coordinating in one sequential pass |
 
 Each skill follows the same pattern: the orchestrator opens a Tiza run, spawns specialists as Claude Code subagents that write typed findings to the shared store from their own context windows, then synthesizes from the store digest. This is the CA-MCP coordination architecture — see the [benchmark](../code-review-mcp) for numbers on why it uses fewer LLM calls and tokens than naive MCP coordination.
 
