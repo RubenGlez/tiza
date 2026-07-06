@@ -47,7 +47,10 @@ function parseDefects(patch: string): DefectLocation[] {
   let file = "";
   for (const line of patch.split("\n")) {
     if (line.startsWith("--- ")) {
-      file = line.replace(/^--- a\//, "").replace(/^--- /, "").trim();
+      file = line
+        .replace(/^--- a\//, "")
+        .replace(/^--- /, "")
+        .trim();
       continue;
     }
     const hunk = line.match(/^@@ -(\d+)(?:,(\d+))? \+\d+(?:,\d+)? @@/);
@@ -113,7 +116,9 @@ async function main() {
   const dir = path.join(import.meta.dirname, "data");
   mkdirSync(dir, { recursive: true });
   writeFileSync(path.join(dir, "instances.json"), JSON.stringify({ instances }, null, 2));
-  console.log(`Wrote ${instances.length} instances (of ${json.rows.length} rows) to data/instances.json`);
+  console.log(
+    `Wrote ${instances.length} instances (of ${json.rows.length} rows) to data/instances.json`,
+  );
 }
 
 main().catch((e) => {

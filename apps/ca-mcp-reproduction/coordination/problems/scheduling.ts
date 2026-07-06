@@ -44,14 +44,19 @@ export function makeScheduling(opts: { n: number }): Problem {
     }
     // Distinctness (machine can't run two jobs at once).
     const bySlot: Record<number, string[]> = {};
-    for (const [j, s] of Object.entries(slots)) (bySlot[s] ??= []).push(j);
+    for (const [j, s] of Object.entries(slots)) {
+      bySlot[s] ??= [];
+      bySlot[s].push(j);
+    }
     for (const [s, js] of Object.entries(bySlot)) {
       if (js.length > 1) violations.push(`slot ${s} double-booked by ${js.join(", ")}`);
     }
     // Precedence.
     for (const [a, b] of precedence) {
       if (a in slots && b in slots && slots[a] >= slots[b]) {
-        violations.push(`precedence violated: ${a}(slot ${slots[a]}) not before ${b}(slot ${slots[b]})`);
+        violations.push(
+          `precedence violated: ${a}(slot ${slots[a]}) not before ${b}(slot ${slots[b]})`,
+        );
       }
     }
     return { pass: violations.length === 0, violations };

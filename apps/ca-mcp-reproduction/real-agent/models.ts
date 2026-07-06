@@ -93,7 +93,8 @@ export const MODELS: Record<string, ModelSpec> = {
 // Transient failures (DNS blips, resets, rate limits, 5xx) shouldn't kill a long run.
 function isTransient(e: unknown): boolean {
   const s = String((e as { message?: string })?.message ?? e);
-  if (/ENOTFOUND|ECONNRESET|ETIMEDOUT|EAI_AGAIN|fetch failed|Connection error/i.test(s)) return true;
+  if (/ENOTFOUND|ECONNRESET|ETIMEDOUT|EAI_AGAIN|fetch failed|Connection error/i.test(s))
+    return true;
   const status = (e as { status?: number })?.status;
   return status === 429 || status === 500 || status === 502 || status === 503 || status === 529;
 }
@@ -141,12 +142,15 @@ export class ModelClient {
 
   async call(params: CallParams): Promise<ModelResponse> {
     return withRetry(() =>
-      this.spec.provider === "anthropic" ? this.callAnthropic(params) : this.callOpenAiCompat(params),
+      this.spec.provider === "anthropic"
+        ? this.callAnthropic(params)
+        : this.callOpenAiCompat(params),
     );
   }
 
   private async callAnthropic(params: CallParams): Promise<ModelResponse> {
-    const res = await this.anthropic!.messages.create({
+    if (!this.anthropic) throw new Error("Anthropic client not initialized");
+    const res = await this.anthropic.messages.create({
       model: this.spec.apiModel,
       max_tokens: params.maxTokens,
       temperature: params.temperature ?? 0,
@@ -169,16 +173,19 @@ export class ModelClient {
   }
 
   private async callOpenAiCompat(params: CallParams): Promise<ModelResponse> {
-    if (!this.openai) {
+    let client = this.openai;
+    if (!client) {
       // Specifier cast to string defers TS module resolution so the Anthropic-only scaffold
       // compiles before `openai` is installed. Install `openai` to use OpenAI / DeepSeek.
       const { default: OpenAI } = (await import("openai" as string)) as {
         default: new (args: { apiKey: string; baseURL?: string }) => OpenAiLike;
       };
-      const key = process.env[this.spec.apiKeyEnv]!;
-      this.openai = new OpenAI({ apiKey: key, baseURL: this.spec.baseUrl });
+      const key = process.env[this.spec.apiKeyEnv];
+      if (!key) throw new Error(`${this.spec.apiKeyEnv} is not set`);
+      client = new OpenAI({ apiKey: key, baseURL: this.spec.baseUrl });
+      this.openai = client;
     }
-    const res = (await this.openai!.chat.completions.create({
+    const res = (await client.chat.completions.create({
       model: this.spec.apiModel,
       max_tokens: params.maxTokens,
       temperature: params.temperature ?? 0,

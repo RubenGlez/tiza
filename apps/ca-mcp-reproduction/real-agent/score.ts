@@ -5,8 +5,8 @@
 // is recorded separately as a weaker signal. The matching rule is intentionally mechanical
 // and documented so results are reproducible and not adjudicated by hand.
 
-import type { DefectLocation, SweInstance } from "./swebench";
 import type { Finding } from "../types";
+import type { DefectLocation, SweInstance } from "./swebench";
 
 const LINE_TOLERANCE = 3;
 

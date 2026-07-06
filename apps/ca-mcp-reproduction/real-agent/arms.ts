@@ -14,17 +14,23 @@
 // changes process realism, not token counts (the synthesis input is identical).
 
 import { createStore } from "@tiza/core";
+import type { Finding } from "../types";
 import type { CostTracker } from "./cost";
 import type { Lane } from "./lanes";
 import type { ModelClient, Usage } from "./models";
 import { runSpecialist, type SpecialistResult } from "./specialist";
-import type { Finding } from "../types";
 
 export type ArmName = "baseline" | "no-store" | "store-synth" | "store-skip" | "verbose-baseline";
 // verbose-baseline is a DIAGNOSTIC arm (not part of the ablation ladder): a naive orchestrator
 // whose agents emit free-form prose that accumulates raw into synthesis. Isolates whether the
 // token saving comes from structured output or from the store.
-export const ARMS: ArmName[] = ["baseline", "no-store", "store-synth", "store-skip", "verbose-baseline"];
+export const ARMS: ArmName[] = [
+  "baseline",
+  "no-store",
+  "store-synth",
+  "store-skip",
+  "verbose-baseline",
+];
 
 // Token usage split by call stage. synthesisInput is the number the paper's 2->3 claim is
 // about: the orchestrator reads a growing transcript (baseline) vs a compact digest (store).
@@ -43,9 +49,7 @@ export interface ArmResult {
 }
 
 function findingsToText(results: SpecialistResult[]): string {
-  return results
-    .map((r) => `### ${r.lane}\n${JSON.stringify(r.findings, null, 0)}`)
-    .join("\n\n");
+  return results.map((r) => `### ${r.lane}\n${JSON.stringify(r.findings, null, 0)}`).join("\n\n");
 }
 
 function storeDigest(task: string, results: SpecialistResult[]): string {

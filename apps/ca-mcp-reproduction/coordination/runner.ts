@@ -12,7 +12,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { CostCapExceeded, CostTracker } from "../real-agent/cost";
-import { ModelClient, MODELS } from "../real-agent/models";
+import { MODELS, ModelClient } from "../real-agent/models";
 import { mean, stddev } from "../real-agent/score";
 import { type ArmName, runArm } from "./arms";
 import { PROBLEMS } from "./problems/index";
@@ -68,7 +68,16 @@ async function main() {
     writeFileSync(
       artifactPath,
       JSON.stringify(
-        { model: spec.key, apiModel: spec.apiModel, runs, problems: problemKeys, arms, spentUsd: cost.spent, timestamp: new Date().toISOString(), cells },
+        {
+          model: spec.key,
+          apiModel: spec.apiModel,
+          runs,
+          problems: problemKeys,
+          arms,
+          spentUsd: cost.spent,
+          timestamp: new Date().toISOString(),
+          cells,
+        },
         null,
         2,
       ),

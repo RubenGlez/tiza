@@ -12,7 +12,7 @@ import path from "node:path";
 import { ARMS, type ArmName, runArm } from "./arms";
 import { CostCapExceeded, CostTracker } from "./cost";
 import { lanes as laneSet } from "./lanes";
-import { ModelClient, MODELS } from "./models";
+import { MODELS, ModelClient } from "./models";
 import { mean, scoreInstance, stddev } from "./score";
 import { loadInstances } from "./swebench";
 
@@ -98,7 +98,9 @@ async function main() {
         `     $${costByArm[arm].toFixed(4)}`,
     );
   }
-  console.log(`\nn=${recallByArm[armsToRun[0]].length} per arm. Total spend: $${cost.spent.toFixed(4)} / $${cap} cap`);
+  console.log(
+    `\nn=${recallByArm[armsToRun[0]].length} per arm. Total spend: $${cost.spent.toFixed(4)} / $${cap} cap`,
+  );
 }
 
 main().catch((e) => {

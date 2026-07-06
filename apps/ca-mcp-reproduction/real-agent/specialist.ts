@@ -5,10 +5,10 @@
 // defensively so the same prompt works across Anthropic / OpenAI / DeepSeek (tool-use wire
 // formats differ between providers; JSON-in-text is the portable contract).
 
+import type { Finding } from "../types";
 import type { CostTracker } from "./cost";
 import type { Lane } from "./lanes";
 import type { ModelClient, Usage } from "./models";
-import type { Finding } from "../types";
 
 const SEVERITIES = new Set(["critical", "high", "medium", "low", "info"]);
 
@@ -64,7 +64,8 @@ function parseFindings(text: string): Finding[] {
   for (const raw of parsed) {
     if (typeof raw !== "object" || raw === null) continue;
     const r = raw as Record<string, unknown>;
-    const severity = typeof r.severity === "string" && SEVERITIES.has(r.severity) ? r.severity : "info";
+    const severity =
+      typeof r.severity === "string" && SEVERITIES.has(r.severity) ? r.severity : "info";
     if (typeof r.issue !== "string" || r.issue.length === 0) continue;
     findings.push({
       severity: severity as Finding["severity"],
@@ -86,7 +87,8 @@ export async function runSpecialist(
   verbose = false,
 ): Promise<SpecialistResult> {
   const res = await client.call({
-    system: "You are a meticulous code reviewer. You never report an issue you have not verified against the code.",
+    system:
+      "You are a meticulous code reviewer. You never report an issue you have not verified against the code.",
     user: buildPrompt(lane, codeUnderReview, priorDigest, verbose),
     maxTokens: verbose ? 2500 : 1500,
   });

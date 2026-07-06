@@ -1,7 +1,12 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
   "files": {
-    "includes": ["**", "!**/node_modules", "!**/dist", "!apps/ca-mcp-reproduction/benchmark-results"]
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!apps/ca-mcp-reproduction/benchmark-results"
+    ]
   },
   "linter": {
     "enabled": true,

@@ -39,8 +39,8 @@ function printTable(filePath: string): void {
   const artifact = loadArtifact(filePath);
   console.log(`**${artifact.model} (k=${artifact.runs})**`);
   console.log("");
-  console.log("| Problem | " + artifact.arms.join(" | ") + " |");
-  console.log("|---|" + artifact.arms.map(() => "---").join("|") + "|");
+  console.log(`| Problem | ${artifact.arms.join(" | ")} |`);
+  console.log(`|---|${artifact.arms.map(() => "---").join("|")}|`);
   for (const problem of artifact.problems) {
     const cells = artifact.arms.map((arm) => fmtCell(artifact.cells[problem][arm]));
     console.log(`| ${problem} | ${cells.join(" | ")} |`);

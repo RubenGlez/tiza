@@ -40,7 +40,9 @@ interface State {
 }
 
 function isClosedLeg(a: string, b: string): boolean {
-  return (a === CLOSED_PAIR[0] && b === CLOSED_PAIR[1]) || (a === CLOSED_PAIR[1] && b === CLOSED_PAIR[0]);
+  return (
+    (a === CLOSED_PAIR[0] && b === CLOSED_PAIR[1]) || (a === CLOSED_PAIR[1] && b === CLOSED_PAIR[0])
+  );
 }
 
 function legBetween(aName: string, bName: string, state: State): number {
@@ -101,7 +103,8 @@ export function makeRideSharing(opts: { dynamic: boolean }): Problem {
 
     for (const v of VEHICLES) {
       const pax = assignment[v];
-      if (pax.length > CAPACITY) violations.push(`${v} over capacity (${pax.length} > ${CAPACITY})`);
+      if (pax.length > CAPACITY)
+        violations.push(`${v} over capacity (${pax.length} > ${CAPACITY})`);
       if (pax.length === 0) continue;
       const arr = airportArrival(pax, state);
       if (arr > DEADLINE) {

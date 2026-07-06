@@ -38,7 +38,8 @@ export const LANES: Lane[] = [
   },
   {
     name: "config",
-    angle: "configuration issues: hardcoded credentials/URLs, magic values, environment assumptions",
+    angle:
+      "configuration issues: hardcoded credentials/URLs, magic values, environment assumptions",
   },
   {
     name: "input-validation",

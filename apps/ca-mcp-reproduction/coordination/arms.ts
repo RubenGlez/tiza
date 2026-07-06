@@ -91,7 +91,8 @@ async function planAgent(
   ctr: Counters,
 ): Promise<Record<string, unknown>> {
   const res = await client.call({
-    system: "You are a planning agent coordinating with others to produce a valid joint plan. Output only the requested JSON.",
+    system:
+      "You are a planning agent coordinating with others to produce a valid joint plan. Output only the requested JSON.",
     user: `${problem.agentBrief(agent)}${context ? `\n\n${context}` : ""}`,
     maxTokens: 400,
   });
@@ -125,7 +126,9 @@ async function coordinate(
       const results = await Promise.all(
         problem.agents.map((a) => planAgent(client, cost, problem, a, note, ctr)),
       );
-      problem.agents.forEach((a, i) => (plan[a] = results[i]));
+      problem.agents.forEach((a, i) => {
+        plan[a] = results[i];
+      });
     } else {
       for (const a of problem.agents) {
         const shared =
