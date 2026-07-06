@@ -28,14 +28,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Build first: @tiza/mcp tests and typecheck resolve @tiza/core via its built dist/.
+      - name: Build
+        run: pnpm build
+
       - name: Lint
         run: pnpm check
 
       - name: Test
         run: pnpm test
-
-      - name: Build
-        run: pnpm build
 
       - name: Typecheck
         run: pnpm typecheck
