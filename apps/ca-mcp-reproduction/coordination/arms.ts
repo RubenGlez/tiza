@@ -1,18 +1,19 @@
-// The coordination arms — a 3-arm ablation so any advantage is attributable, not a strawman.
+// The coordination arms — a 4-arm ablation so any advantage is attributable, not a strawman.
 //
 // All arms use the SAME real LLM sub-planners on the SAME problem; they differ only in HOW
 // agents coordinate:
 //
 //   parallel — agents act simultaneously each round, seeing only the orchestrator's relayed
 //              conflict summary (no peer visibility). The coordination floor.
-//   relay    — agents act SEQUENTIALLY; the orchestrator re-transmits every prior commitment
-//              in each agent's prompt. No persistent store. A competent traditional MCP loop.
-//   store    — agents act SEQUENTIALLY reading a persistent shared store (CA-MCP). The store
-//              carries state across rounds and across a disruption without re-transmission.
+//   naive    — agents act SEQUENTIALLY; the orchestrator re-transmits every prior commitment
+//              in each agent's prompt. This models a history-accumulating traditional MCP loop.
+//   compact  — agents act SEQUENTIALLY; the orchestrator relays only current commitments.
+//   store    — agents act SEQUENTIALLY reading a shared-store digest (CA-MCP-style).
 //
-// parallel->relay isolates the value of sequencing; relay->store isolates the value of the
-// store itself. Metrics: LLM CALLS to a valid plan and the FAILURE RATE of the final plan
-// (the paper's metrics). Dynamic problems run two phases: plan, then disrupt, then re-coordinate.
+// parallel->naive isolates sequencing. naive->compact isolates context discipline.
+// compact->store isolates the shared-store mechanism. Metrics: LLM CALLS to a valid plan and
+// the FAILURE RATE of the final plan (the paper's metrics). Dynamic problems run two phases:
+// plan, then disrupt, then re-coordinate.
 
 import type { CostTracker } from "../real-agent/cost";
 import type { ModelClient } from "../real-agent/models";
@@ -158,7 +159,7 @@ export async function runArm(
 ): Promise<ArmResult> {
   const ctr: Counters = { calls: 0, input: 0, output: 0 };
   const plan: Plan = {};
-  const history: string[] = []; // relay's growing conversation; persists across phases
+  const history: string[] = []; // naive's growing conversation; persists across phases
 
   // Phase 1: initial plan.
   let result = await coordinate(arm, client, cost, problem, plan, ctr, "", history);

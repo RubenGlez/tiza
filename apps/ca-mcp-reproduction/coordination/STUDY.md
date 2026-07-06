@@ -10,9 +10,9 @@ instead of routing every coordination step through the central LLM, and reports 
 calls** and **fewer response failures** on complex planning tasks (evaluated on TravelPlanner and
 REALM-Bench).
 
-We reimplement the mechanism and test the claim on faithfully reconstructed REALM-Bench
-coordination problems, with deterministic pass/fail checkers, under a strict ablation designed so
-that any advantage is *attributable* rather than a strawman win.
+We reimplement the mechanism and test the claim on deterministic, REALM-Bench-inspired
+coordination problems, with objective pass/fail checkers, under a strict ablation designed so that
+any advantage is *attributable* rather than a strawman win.
 
 ## Claim under test
 
@@ -22,10 +22,12 @@ that any advantage is *attributable* rather than a strawman win.
 
 ## Method
 
-### Problems (deterministic, faithful to REALM-Bench)
+### Problems (deterministic, REALM-Bench-inspired)
 
-Reconstructed from REALM-Bench (Geng & Han, [arXiv:2502.18836](https://arxiv.org/abs/2502.18836)),
-each with an objective constraint-checker — no LLM judge:
+Inspired by REALM-Bench (Geng & Chang, [arXiv:2502.18836](https://arxiv.org/abs/2502.18836)),
+each with an objective constraint-checker — no LLM judge. These are not the original
+REALM-Bench harness instances; they are small deterministic stress tasks designed to isolate the
+CA-MCP attribution question:
 
 - **P3 — Urban Ride-Sharing (static).** 3 vehicles (capacity 2) carry 4 passengers to the airport
   by deadlines. Geometry tuned so only correct passenger clustering meets the deadlines. Failure =
@@ -46,7 +48,7 @@ agents coordinate:
 | `parallel` | Agents act simultaneously each round, seeing only a relayed conflict summary. Coordination floor. |
 | `naive` | Sequential; the orchestrator re-transmits the **growing conversation history** each step. The paper's characterization of traditional MCP. |
 | `compact` | Sequential; the orchestrator relays only the **current commitments** (no history). A competent orchestrator — the steelman the store must beat to matter. |
-| `store` | Sequential; agents read/write a **persistent shared store** (CA-MCP). |
+| `store` | Sequential; agents read/write a **shared-store digest** (CA-MCP-style). |
 
 `parallel → naive` isolates sequencing. `naive → compact` isolates context discipline.
 **`compact → store` isolates the shared store itself** — the comparison that decides whether the
@@ -58,34 +60,36 @@ store earns its keep, or whether a competent orchestrator already captures the b
 - **Failure rate**: fraction of runs whose final plan fails the deterministic checker.
 - **Input tokens** (secondary; where a growing-history orchestrator pays).
 
-Reported as mean ± std over k runs. Each run writes a JSON reproducibility artifact
-(`coordination/results/`). Develop on DeepSeek; headline numbers on a capable model. Hard spend
-cap enforced in-harness.
+Tables report means over k runs; the committed JSON artifacts keep the per-run values needed to
+compute variance. Each run writes a JSON reproducibility artifact (`coordination/results/`). The
+write-up tables are generated from the two committed canonical artifacts in that directory.
+Develop on DeepSeek; headline numbers on a capable model. Hard spend cap enforced in-harness.
 
 ## Results
 
 Two providers (cross-model validity): **DeepSeek** (k=3) and **GPT-4o** (k=5). Temperature 0.
-Raw artifacts in `coordination/results/`. Failure rate / mean LLM calls / mean input tokens.
+Raw artifacts: `coordination/results/canonical-deepseek-chat.json` and
+`coordination/results/canonical-gpt-4o.json`. Failure rate / mean LLM calls / mean input tokens.
 
 **GPT-4o (k=5):**
 
 | Problem | parallel | naive | compact | store |
 |---|---|---|---|---|
-| P3 (ride-share) | 100% / 12 / 4870 | 100% / 12 / 5838 | **0% / 3 / 1182** | **0% / 3 / 1182** |
-| P4 (dynamic) | 100% / 24 | 100% / 24 / 14150 | 20% / 10.2 / 4780 | 100% / 15 / 7458 |
-| S3 (3 agents) | 0% / 3 | 0% / 3 | 0% / 3 / 572 | 0% / 3 / 571 |
-| S5 (5 agents) | 100% / 20 | 100% / 20 / 6010 | **0% / 5 / 1089** | **0% / 5 / 1090** |
-| S8 (8 agents) | 100% / 32 | 100% / 32 / 12251 | **0% / 8 / 2103** | **0% / 8 / 2107** |
+| P3 | 100% / 12 / 4870 | 100% / 12 / 5838 | **0% / 3 / 1182** | **0% / 3 / 1182** |
+| P4 | 100% / 24 / 10207 | 100% / 24 / 14150 | 20% / 10.2 / 4780 | 100% / 15 / 7458 |
+| S3 | 0% / 3 / 516 | 0% / 3 / 543 | 0% / 3 / 572 | 0% / 3 / 571 |
+| S5 | 100% / 20 / 4330 | 100% / 20 / 6010 | **0% / 5 / 1089** | **0% / 5 / 1090** |
+| S8 | 100% / 32 / 8192 | 100% / 32 / 12251 | **0% / 8 / 2103** | **0% / 8 / 2107** |
 
 **DeepSeek (k=3):**
 
 | Problem | parallel | naive | compact | store |
 |---|---|---|---|---|
-| P3 | 100% / 12 | 0% / 6 / 2280 | **0% / 3 / 1062** | **0% / 3 / 1065** |
-| P4 (dynamic) | 100% / 24 | 100% / 20 / 10964 | 0% / 7 / 2832 | 0% / 6 / 2367 |
-| S3 | 100% / 12 | 100% / 12 | **0% / 3 / 558** | **0% / 3 / 561** |
-| S5 | 100% / 20 | 100% / 20 / 5975 | **0% / 5 / 1065** | **0% / 5 / 1074** |
-| S8 | 100% / 32 | 100% / 32 / 12333 | **0% / 8 / 2064** | **0% / 8 / 2082** |
+| P3 | 100% / 12 / 4371 | 0% / 6 / 2280 | **0% / 3 / 1062** | **0% / 3 / 1065** |
+| P4 | 100% / 24 / 9502 | 100% / 20 / 10964 | 0% / 7 / 2832 | 0% / 6 / 2367 |
+| S3 | 100% / 12 / 2286 | 100% / 12 / 2916 | **0% / 3 / 558** | **0% / 3 / 561** |
+| S5 | 100% / 20 / 4320 | 100% / 20 / 5975 | **0% / 5 / 1065** | **0% / 5 / 1074** |
+| S8 | 100% / 32 / 8597 | 100% / 32 / 12333 | **0% / 8 / 2064** | **0% / 8 / 2082** |
 
 ## Findings
 
@@ -114,9 +118,10 @@ throughout: `parallel` fails everywhere except the trivial 3-agent S3.
 
 **Relation to the paper.** We reproduce the paper's *direction* — CA-MCP beats naive MCP on calls
 and failures. We do **not** reproduce the implicit attribution that the *store* is the source of
-the gain: a competent orchestrator that keeps only current state matches it at every scale, on two
-providers. The paper's reported advantage appears to be over a weak (history-accumulating)
-baseline rather than evidence that the shared store is a distinct mechanism.
+the gain: a competent orchestrator that keeps only current state matches it at every static scale,
+on two providers. The paper's reported advantage appears to be over a weak
+(history-accumulating) baseline rather than evidence that the shared store is a distinct
+mechanism.
 
 **Boundary condition (where the store should still earn its keep).** These problems have small,
 cheap-to-serialize state over short horizons, and we hand the `compact` baseline that state for
@@ -126,22 +131,19 @@ don't stress. Our results bound where the store does *not* help (small state, sh
 do not claim it never helps. Testing the large-state / long-horizon regime is the natural next
 step.
 
-## Bonus finding (code-review domain)
-
-A separate pilot on real-agent code review (SWE-bench Verified) found that the token savings
-commonly attributed to the store actually come from **structured agent output**, not the store:
-once agents emit structured findings, raw-accumulation and store-digest synthesis cost the same.
-See `../real-agent/`. The two studies probe the store from different angles — coordination here,
-context-compaction there.
-
 ## Threats to validity
 
-- Problems are faithful *reconstructions* of REALM-Bench, not its original harness; constraints
-  and checkers follow the published specs but are our implementation.
+- Problems are deterministic, REALM-Bench-inspired reconstructions, not the original REALM-Bench
+  harness; constraints and checkers are our implementation.
+- The `store` arm evaluates CA-MCP-style shared-state prompting, not the overhead or failure modes
+  of a full MCP server process. `packages/core` and `packages/mcp` implement that protocol surface,
+  but the coordination harness keeps the store in-process so token/call comparisons stay focused.
 - Single task family per domain; results are scoped to these problems.
 - Model and provider variance: numbers are observed run results, not constants.
 - The `naive` / `compact` distinction is a modeling choice; we report both rather than pick one,
   precisely so the comparison can't be rigged toward the store.
+- The scaffolded `../real-agent/` SWE-bench study is not part of this claim until it has run and
+  produced its own artifacts.
 
 ## Reproduce
 
@@ -149,6 +151,7 @@ context-compaction there.
 # capable model (cross-provider validation used deepseek-chat + gpt-4o)
 OPENAI_API_KEY=...   pnpm tsx coordination/runner.ts --model gpt-4o       --runs 5 --cap 12
 DEEPSEEK_API_KEY=... pnpm tsx coordination/runner.ts --model deepseek-chat --runs 5 --cap 2
+pnpm --filter ca-mcp-reproduction summarize-results coordination/results/canonical-*.json
 ```
 
 The runner retries transient API errors and checkpoints results to `coordination/results/`

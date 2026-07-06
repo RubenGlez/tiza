@@ -4,6 +4,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "coordinate": "tsx coordination/runner.ts",
+    "summarize-results": "tsx coordination/summarize-results.ts",
     "pilot": "tsx real-agent/pilot.ts",
     "fetch-swebench": "tsx real-agent/fetch-swebench.ts"
   },

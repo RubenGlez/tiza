@@ -1,5 +1,5 @@
-// REALM-Bench P3 (Urban Ride-Sharing, static) and P4 (with disruptions), faithfully
-// reimplemented with a deterministic checker. Cite: Geng & Han, REALM-Bench, arXiv:2502.18836.
+// REALM-Bench-inspired P3 (Urban Ride-Sharing, static) and P4 (with disruptions), implemented
+// with a deterministic checker. Cite: Geng & Chang, REALM-Bench, arXiv:2502.18836.
 //
 // 3 vehicles (capacity 2) must carry 4 passengers to the airport, each by minute 793 (1:13 PM).
 // Geometry is tuned so coordination matters: valid 2-passenger groupings are {P1,P2} and

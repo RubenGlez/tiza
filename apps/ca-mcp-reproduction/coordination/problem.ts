@@ -1,7 +1,7 @@
 // Coordination-problem framework for the CA-MCP reproduction study.
 //
 // A problem is a multi-agent planning task with INTER-AGENT DEPENDENCIES and a DETERMINISTIC
-// checker — modeled faithfully on REALM-Bench (Geng & Han, arXiv:2502.18836). Agents each own
+// checker — inspired by REALM-Bench (Geng & Chang, arXiv:2502.18836). Agents each own
 // a sub-plan; the combined plan is judged pass/fail by an objective checker (constraint
 // violation / deadline miss / over-allocation). That checker is the paper's failure-rate
 // metric, with no LLM judge in the loop.
