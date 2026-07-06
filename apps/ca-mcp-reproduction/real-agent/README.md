@@ -1,13 +1,13 @@
-# Real-agent benchmark (generation 2)
+# Real-agent code-review study (scaffold)
 
-A **separate** benchmark generation from the mocked one in the parent directory. The
-mocked benchmark (`../benchmark.ts`) holds agent work constant with deterministic scanners
-and measures coordination overhead in isolation. This generation replaces the scanners with
-**real LLM specialists** so it tests the paper's claim under realistic conditions where the
-agents actually reason.
+A companion study that probes the CA-MCP store from the code-review angle, complementing the
+primary coordination study in [`../coordination`](../coordination). Where the coordination
+study uses deterministic sub-planners, this one uses **real LLM specialists** reviewing real
+code, so it tests the paper's claim under realistic conditions where the agents actually
+reason.
 
-The two generations are kept side by side on purpose: the README mandates that new
-capabilities be measured as a separate generation so the existing numbers stay comparable.
+It is a scaffold: the design below is fixed, but no runs have happened yet, so it is **not**
+part of the repo's headline claim. See **Status** below.
 
 ## Design (defensible-against-experts bar)
 
