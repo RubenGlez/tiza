@@ -16,8 +16,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 11.5.0
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -40,3 +38,6 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+      - name: Audit
+        run: pnpm audit --audit-level=high --prod
