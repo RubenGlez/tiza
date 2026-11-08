@@ -1,0 +1,5 @@
+# doctier policy files — any change to these reclassifies private docs or alters
+# who can decrypt them; treat every diff as a security review.
+/.doctier.yml @RubenGlez
+/.doctier/recipients.txt @RubenGlez
+/.gitattributes @RubenGlez
